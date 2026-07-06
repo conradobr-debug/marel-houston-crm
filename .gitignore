@@ -1,0 +1,10 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+config/runtime-config.js
+supabase/.temp/
+node_modules/
+dist/
+coverage/
+

@@ -1,0 +1,3533 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0b" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Marel CRM" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Marel Houston CRM</title>
+  <style>
+    :root{
+      --bg:#F7FBFC;
+      --line:#D9E7EA;
+      --text:#244047;
+      --muted:#6E8790;
+      --shadow: 0 10px 24px rgba(24, 62, 72, .08);
+      --r:16px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background: linear-gradient(180deg, #F9FCFD 0%, #F3F8F9 100%) fixed;
+    }
+    header{
+      width:100%;
+      padding:14px 12px 10px;
+      display:flex; gap:14px; justify-content:space-between; align-items:flex-end; flex-wrap:wrap;
+    }
+    .wrap{width:100%; padding:0 10px 12px;}
+    .brand{display:flex; gap:12px; align-items:center;}
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(150,186,255,.98), rgba(76,237,187,.92));
+      box-shadow: var(--shadow);
+    }
+    h1{margin:0; font-size:16px; letter-spacing:.2px}
+    .sub{margin-top:4px; font-size:12px; color:var(--muted); line-height:1.3; max-width: 980px}
+    .syncStatus{
+      display:inline-flex; align-items:center; gap:6px;
+      margin-top:6px; padding:4px 8px;
+      border:1px solid #D9E7EA; border-radius:999px;
+      background:#FFFFFF; color:var(--muted);
+      font-size:11px; font-weight:600;
+    }
+    .syncStatus::before{
+      content:""; width:7px; height:7px; border-radius:50%;
+      background:#A9BBC0;
+    }
+    .syncStatus.online::before{background:#2FC88F;}
+    .syncStatus.reconnecting::before{background:#F0B44D;}
+    .syncStatus.offline::before,.syncStatus.error::before{background:#E66D6D;}
+
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center}
+    button, .btn{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, #FFFFFF, #F6FBFC);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:650;
+      transition:.15s transform, .15s border-color, .15s background;
+    }
+    button:hover, .btn:hover{transform: translateY(-1px); border-color: rgba(150,186,255,.55);}
+    button.primary{border-color: rgba(150,186,255,.85); background: linear-gradient(180deg, rgba(150,186,255,.25), rgba(150,186,255,.10));}
+    button.danger{border-color: rgba(255,128,128,.75); background: linear-gradient(180deg, rgba(255,128,128,.20), rgba(255,128,128,.07));}
+    button.ghost{background: transparent;}
+    button:disabled{opacity:.55; cursor:not-allowed; transform:none}
+
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+      padding:8px;
+      background: #FFFFFF;
+      border:1px solid #E0EBED;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+    .tab{
+      padding:9px 12px; border-radius:12px; cursor:pointer;
+      border:1px solid transparent; color:var(--muted); font-weight:650; font-size:13px;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color: #D6E8EA;
+      background: #F1F8F9;
+    }
+
+    .toolbar{
+      margin-top:10px;
+      padding:12px;
+      border:1px solid #E0EBED;
+      border-radius: var(--r);
+      background: #FFFFFF;
+      box-shadow: var(--shadow);
+      display:flex; gap:10px; flex-wrap:wrap; align-items:end;
+    }
+    .field{min-width:170px;}
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+    select, input, textarea{
+      width:100%;
+      border:1px solid #DCE8EA;
+      background: #FFFFFF;
+      color:var(--text);
+      padding:10px 10px;
+      border-radius: 12px;
+      outline:none;
+    }
+    input::placeholder, textarea::placeholder{color: rgba(183,194,234,.65)}
+    .search{min-width:260px; flex:1;}
+    .kpiRow{display:flex; gap:10px; flex-wrap:wrap; margin-left:auto}
+    .kpi{
+      min-width:150px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.78);
+    }
+    .kpi .n{font-size:18px; font-weight:700}
+    .kpi .t{font-size:12px; color:var(--muted); margin-top:2px}
+
+    .boardWrap{
+      margin-top:10px;
+      border:1px solid #E0EBED;
+      border-radius: var(--r);
+      background: #FFFFFF;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .boardHint{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(47,61,110,.8);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      color:var(--muted); font-size:12px;
+    }
+    .board{
+      display:flex;
+      gap:10px;
+      padding:10px;
+      overflow-x:auto;
+      scroll-snap-type: x proximity;
+      min-height: calc(100vh - 250px);
+    }
+    .col{
+      min-width: 290px;
+      max-width: 330px;
+      flex: 0 0 auto;
+      background: #F0FAFB;
+      border:1px solid #D9EDEE;
+      border-radius: 16px;
+      scroll-snap-align: start;
+      display:flex; flex-direction:column;
+      max-height: calc(100vh - 265px);
+    }
+    .colHd{
+      padding:12px 12px 10px;
+      border-bottom:1px solid rgba(47,61,110,.85);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .colTitle{
+      display:flex; flex-direction:column; gap:4px;
+      font-weight:650; letter-spacing:.2px; font-size:13px;
+    }
+    .colTitle small{color:var(--muted); font-weight:600; font-size:11px}
+    .count{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding:6px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.92);
+      color: #36575E;
+    }
+    .dropZone{
+      padding:10px;
+      overflow:auto;
+      display:flex; flex-direction:column; gap:10px;
+      flex: 1;
+      min-height: 120px;
+    }
+    .dropZone.dragover{
+      outline:2px dashed rgba(150,186,255,.65);
+      outline-offset:-6px;
+      background: rgba(150,186,255,.08);
+    }
+
+    .card{
+      position:relative;
+      border:1px solid #E1ECEE;
+      background: linear-gradient(180deg, #FFFFFF, #FBFDFD);
+      border-radius: 14px;
+      padding:10px;
+      cursor:pointer;
+      box-shadow: 0 6px 16px rgba(28, 74, 80, .06);
+      transition: .12s transform, .12s border-color, .12s background;
+      user-select:none;
+      z-index: 1;
+    }
+    .card:hover{transform: translateY(-1px); border-color: rgba(150,186,255,.55); background: linear-gradient(180deg, #FFFFFF, #F6FBFC);}
+    .card.menuOpen{z-index: 5000; transform:none !important;}
+    .card.menuOpen:hover{transform:none !important;}
+
+    .card.grab{cursor:grab;}
+    .card.grab:active{cursor:grabbing;}
+    .cTop{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+    .customerIdentity{display:flex;align-items:center;gap:9px;min-width:0}
+    .customerAvatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;object-fit:cover;border:1px solid rgba(18,35,52,.18);background:#fff}
+    .customerAvatarFallback{display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)}
+    .cName{font-weight:700; font-size:14px; letter-spacing:.2px; line-height:1.15;}
+    .rightTop{display:flex; gap:8px; align-items:center}
+
+    .badge{
+      font-size:11px; font-weight:600;
+      border-radius:999px;
+      padding:6px 8px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.94);
+      white-space:nowrap;
+      color: #36575E;
+      max-width:140px;
+      overflow:hidden; text-overflow:ellipsis;
+    }
+    .dots{
+      width:34px; height:32px;
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: #FFFFFF;
+      color: #36575E;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .dots:hover{border-color: rgba(150,186,255,.55); background: rgba(150,186,255,.10)}
+    .menu{
+      position:absolute;
+      top:42px; right:10px;
+      min-width: 170px;
+      border:1px solid #E0EBED;
+      background: #FFFFFF;
+      border-radius: 14px;
+      box-shadow: 0 14px 32px rgba(24,62,72,.12);
+      padding:6px;
+      display:none;
+      z-index: 5001;
+    }
+    .menu.open{display:block}
+    .menu button{
+      width:100%;
+      text-align:left;
+      padding:10px 10px;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background: transparent;
+      font-weight:600;
+      font-size:12px;
+      transform:none;
+    }
+    .menu button:hover{border-color: rgba(150,186,255,.40); background: rgba(150,186,255,.12)}
+    .menu button.dangerItem:hover{border-color: rgba(255,128,128,.40); background: rgba(255,128,128,.12)}
+
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px;}
+    .chip{
+      font-size:11px; font-weight:600;
+      border-radius:999px;
+      padding:6px 8px;
+      border:1px solid rgba(47,61,110,.95);
+      background: #FFFFFF;
+      color: #36575E;
+      max-width:100%;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .chip.muted{color: #6E8790;}
+    .meta{margin-top:8px; color:#5C737A; font-size:11px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .meta b{color:#2F4B52; font-weight:700; font-size:11px;}
+    .scheduleState{
+      margin-top:8px; padding:7px 8px; border-radius:10px;
+      border:1px solid #DCE8EA; background:#F7FBFC;
+      color:#557078; font-size:11px; font-weight:600;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .scheduleState.ok{border-color:#BCE8D8; background:#F0FBF7; color:#267A60;}
+    .scheduleState.warn{border-color:#F3D69F; background:#FFF9ED; color:#8A6426;}
+    .scheduleState.late{border-color:#F1B8B8; background:#FFF3F3; color:#A34444;}
+    .summaryGrid{display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:10px; width:100%;}
+    .summaryCard{padding:14px; border:1px solid #D9E7EA; border-radius:14px; background:#FFFFFF;}
+    .summaryCard .n{font-size:24px; font-weight:700; margin-top:5px;}
+    .summaryCard .t{font-size:12px; color:var(--muted); font-weight:600;}
+    .summaryCard .d{font-size:11px; color:#557078; margin-top:5px; line-height:1.35;}
+    .sectionCard{min-width:360px; flex:1 1 380px; max-width:620px; background:#F8FCFC; border:1px solid #D9E7EA; border-radius:16px; overflow:hidden;}
+    .sectionHd{padding:12px 14px; border-bottom:1px solid #D9E7EA; font-weight:650; display:flex; justify-content:space-between; gap:10px;}
+    .sectionBody{padding:8px 14px 14px;}
+    .reportRow{padding:9px 0; border-bottom:1px dashed #D9E7EA; font-size:12px; line-height:1.4;}
+    .reportRow:last-child{border-bottom:0;}
+    .reportBar{height:8px; border-radius:999px; background:#E8F1F2; overflow:hidden; margin-top:6px;}
+    .reportBar > span{display:block; height:100%; background:linear-gradient(90deg,#96BAFF,#4CEDBB); border-radius:999px;}
+    .formNotice{padding:10px 12px; border:1px solid #F3D69F; border-radius:12px; background:#FFF9ED; color:#745623; font-size:12px; line-height:1.4;}
+    .appointmentComposer{grid-column:span 12;display:grid;grid-template-columns:repeat(12,1fr);gap:10px;padding:14px;border:1px solid #DCE8EA;border-radius:14px;background:#FFFFFF;}
+    .appointmentComposerHd{grid-column:span 12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+    .appointmentComposerTitle{font-size:13px;font-weight:650;color:var(--text);}
+    .appointmentList{grid-column:span 12;display:flex;flex-direction:column;gap:8px;}
+    .appointmentItem{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #DCE8EA;border-radius:12px;background:#F8FBFC;}
+    .appointmentItemMain{min-width:0;font-size:12px;line-height:1.45;}
+    .appointmentItemMain b{font-weight:650;}
+    .appointmentItemMeta{color:var(--muted);font-size:11px;margin-top:2px;}
+    .appointmentItem button{padding:7px 9px;font-size:11px;flex:0 0 auto;}
+    .appointmentEmpty{padding:10px 12px;border:1px dashed #CCDDE0;border-radius:12px;color:var(--muted);font-size:12px;}
+    @media (max-width:900px){.summaryGrid{grid-template-columns:repeat(2,minmax(140px,1fr));}}
+    @media (max-width:520px){.summaryGrid{grid-template-columns:1fr;}}
+
+    /* Stage colors */
+    .s-novo{border-left:4px solid #9ab9ff}
+    .s-atendimento-inicial{border-left:4px solid #74e3ff}
+    .s-so-quer-preco{border-left:4px solid #ffd88a}
+    .s-projeto{border-left:4px solid #d4b2ff}
+    .s-apresentacao{border-left:4px solid #64f0c5}
+    .s-enrolacao{border-left:4px solid #b7c2ea}
+    .s-perdido{border-left:4px solid #ff8a8a}
+    .s-contrato-realizado{border-left:4px solid #9ab9ff}
+    .s-medicao-tecnica{border-left:4px solid #74e3ff}
+    .s-projeto-executivo{border-left:4px solid #d4b2ff}
+    .s-pedido{border-left:4px solid #ffd88a}
+    .s-liberacao-fabrica{border-left:4px solid #64f0c5}
+    .s-agendamento-de-montagem{border-left:4px solid #74e3ff}
+    .s-entrega{border-left:4px solid #64f0c5}
+    .s-pos-venda{border-left:4px solid #9ab9ff}
+    .s-mapeado{border-left:4px solid #9ab9ff}
+    .s-primeiro-contato{border-left:4px solid #74e3ff}
+    .s-relacionamento{border-left:4px solid #d4b2ff}
+    .s-parceiro-ativo{border-left:4px solid #64f0c5}
+    .s-pausado{border-left:4px solid #b7c2ea}
+
+    .stuckTag{
+      font-size:11px; font-weight:600;
+      border-radius:999px;
+      padding:6px 8px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.94);
+      color: #36575E;
+    }
+
+    .empty{
+      padding:14px;
+      border:1px dashed rgba(183,194,234,.40);
+      border-radius:14px;
+      color:var(--muted);
+      text-align:center;
+      margin:10px;
+    }
+
+    /* Dialogs */
+    dialog{
+      width:min(980px, 96vw);
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(20,28,60,.98), rgba(10,16,38,.98));
+      color:var(--text);
+      box-shadow: 0 18px 55px rgba(0,0,0,.48);
+      padding:0;
+    }
+    dialog::backdrop{ background: rgba(0,0,0,.58); }
+    .modalHd{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(47,61,110,.85);
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .modalTitle{font-weight:700}
+    .modalSub{color:var(--muted); font-size:12px; margin-top:4px; line-height:1.3}
+    .modalBd{padding:16px}
+    .form{display:grid; grid-template-columns: repeat(12, 1fr); gap:10px;}
+    .col-12{grid-column: span 12;}
+    .col-6{grid-column: span 6;}
+    .col-4{grid-column: span 4;}
+    .col-3{grid-column: span 3;}
+    @media (max-width: 880px){
+      .col-6,.col-4,.col-3{grid-column: span 12;}
+      #btnAddAppointment{width:100%;min-height:46px;}
+      .appointmentItem{flex-direction:column;}
+      .appointmentItem .btn,.appointmentItem button{width:100%;text-align:center;}
+    }
+    .req{color:#ffd88a; font-weight:700}
+    textarea{min-height:90px; resize:vertical}
+    .modalFt{
+      padding:14px 16px;
+      border-top:1px solid rgba(47,61,110,.85);
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .note{font-size:12px; color:var(--muted); line-height:1.35; max-width:640px}
+    .mono{font-family: var(--mono); font-size: 11px; color: rgba(183,194,234,.95)}
+    .modalQuick{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      margin-left:auto;
+    }
+    .modalQuick button{
+      padding:9px 10px;
+      border-radius: 12px;
+      font-size:12px;
+      font-weight:650;
+    }
+
+    /* Login overlay */
+    #loginModal{width:min(520px, 94vw);}
+    .loginGrid{display:grid; grid-template-columns: 1fr; gap:10px;}
+    .loginActions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center}
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      right:18px; bottom:18px;
+      background: rgba(20,28,60,.96);
+      border:1px solid rgba(150,186,255,.40);
+      color:var(--text);
+      padding:12px 14px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      opacity:0;
+      transform: translateY(8px);
+      transition:.2s opacity, .2s transform;
+      pointer-events:none;
+      max-width: 560px;
+      font-size:13px;
+      line-height:1.35;
+      z-index:999;
+    }
+    .toast.show{opacity:1; transform: translateY(0)}
+  </style>
+  <link rel="stylesheet" href="app.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo" aria-label="Marel Houston"><span class="marelPlaceholderMark">M</span></div>
+    <div>
+      <h1>Marel Houston CRM</h1>
+      <div class="sub" id="sessionLine">Offline (template). Conecte ao Supabase para login e sincronização.</div>
+      <div class="syncStatus offline" id="syncStatus" role="status" aria-live="polite">Sem conexão</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="primary" id="btnNew">+ Novo lead</button>
+    <button class="ghost" id="btnSync">Sincronizar</button>
+    <button class="ghost mobileUtility" id="btnInstall" hidden>Instalar aplicativo</button>
+    <button class="ghost desktopUtility" id="btnSound">Som: OFF</button>
+    <button class="ghost desktopUtility" id="btnExportJson">Exportar backup</button>
+    <label class="btn ghost desktopUtility" for="importJson">Importar</label>
+    <input id="importJson" type="file" accept="application/json" style="display:none" />
+    <button class="danger desktopUtility" id="btnWipe">Limpar local</button>
+    <button class="ghost" id="btnSignOut">Sair</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs" role="tablist" aria-label="Navegação">
+    <div class="tab active" data-tab="leads" role="tab" tabindex="0" aria-selected="true"><span class="tabIcon" aria-hidden="true">●</span><span>Leads</span></div>
+    <div class="tab" data-tab="closed" role="tab" tabindex="0" aria-selected="false"><span class="tabIcon" aria-hidden="true">✓</span><span>Fechados</span></div>
+    <div class="tab" data-tab="specifiers" role="tab" tabindex="0" aria-selected="false"><span class="tabIcon" aria-hidden="true">◇</span><span>Parceiros</span></div>
+    <div class="tab" data-tab="pending" role="tab" tabindex="0" aria-selected="false"><span class="tabIcon" aria-hidden="true">!</span><span>Pendências</span></div>
+    <div class="tab" data-tab="reports" role="tab" tabindex="0" aria-selected="false"><span class="tabIcon" aria-hidden="true">↗</span><span>Relatórios</span></div>
+    <div class="tab" data-tab="config" role="tab" tabindex="0" aria-selected="false"><span class="tabIcon" aria-hidden="true">⚙</span><span>Config</span></div>
+  </div>
+
+  <div class="appStateBanner loading" id="appStateBanner" role="status" aria-live="polite">
+    <span class="appStateSpinner" aria-hidden="true"></span>
+    <div><strong id="appStateTitle">Loading your data</strong><span id="appStateMessage">Waiting for an independent Marel data connection…</span></div>
+    <button class="ghost" id="btnRetryLoad" type="button" hidden>Tentar novamente</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label>Usuário</label>
+      <select id="fOwner"></select>
+    </div>
+    <div class="field">
+      <label id="fSourceLabel">Origem</label>
+      <select id="fSource"></select>
+    </div>
+    <div class="field">
+      <label>Cidade</label>
+      <input id="fCity" placeholder="Example: Houston" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+    </div>
+    <div class="field search">
+      <label>Busca</label>
+      <input id="fSearch" placeholder="Nome, ambiente, observação..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+    </div>
+
+    <div class="field" id="wrapLostFilter" style="min-width:170px;">
+      <label>Perdido</label>
+      <button class="ghost" id="btnToggleLost" type="button">Ocultar Perdido</button>
+    </div>
+
+
+    <div class="kpiRow">
+      <div class="kpi">
+        <div class="n" id="kpiTotal">0</div>
+        <div class="t" id="kpiTotalLabel">No filtro</div>
+      </div>
+      <div class="kpi">
+        <div class="n" id="kpiStuck">0</div>
+        <div class="t" id="kpiStuckLabel">Parados ≥ 14d</div>
+      </div>
+      <div class="kpi">
+        <div class="n" id="kpiDue">0</div>
+        <div class="t" id="kpiDueLabel">Próx. ação ≤ 7d</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="boardWrap">
+    <div class="boardHint" id="boardHint"></div>
+    <div class="board" id="board" aria-busy="true"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Login dialog -->
+  <dialog id="loginModal">
+    <div class="modalHd">
+      <div>
+        <div class="modalTitle">Entrar</div>
+        <div class="modalSub">Use o e-mail e senha criados no Supabase (Auth).</div>
+      </div>
+      <button class="ghost" id="btnCloseLogin" hidden>Fechar</button>
+    </div>
+    <div class="modalBd">
+      <div class="loginGrid">
+        <div>
+          <label>E-mail</label>
+          <input id="loginEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ex.: conrado@empresa.com" />
+        </div>
+        <div>
+          <label>Senha</label>
+          <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+        </div>
+        <div class="note" id="loginNote">
+          Se o login falhar, verifique se o usuário foi criado no painel do Supabase e se o projeto está ativo.
+        </div>
+      </div>
+    </div>
+    <div class="modalFt">
+      <div class="note">Dica: para equipe interna, desabilite “signups” e crie os usuários manualmente no Supabase.</div>
+      <div class="loginActions">
+        <button class="primary" id="btnLogin">Entrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Details modal -->
+  <dialog id="modal">
+    <div class="modalHd">
+      <div class="modalCustomerIdentity">
+        <img id="modalCustomerAvatar" class="modalCustomerAvatar" alt="Foto do cliente" hidden />
+        <div>
+          <div class="modalTitle" id="modalTitle">Detalhes</div>
+          <div class="modalSub" id="modalRequirement">Obrigatório: Nome, Sobrenome, Telefone, Cidade, Ambiente.</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-left:auto">
+        <button class="ghost" id="btnCloseModal">Fechar</button>
+      </div>
+    </div>
+
+    <div class="modalBd">
+      <form class="form" id="form" autocomplete="off">
+        <input type="hidden" id="id" />
+        <input type="hidden" id="recordType" value="lead" />
+
+        <div class="col-3">
+          <label>Nome <span class="req">*</span></label>
+          <input id="firstName" required autocomplete="off" />
+        </div>
+        <div class="col-3">
+          <label>Sobrenome <span class="req">*</span></label>
+          <input id="lastName" required autocomplete="off" />
+        </div>
+        <div class="col-3">
+          <label>Telefone <span class="req">*</span></label>
+          <input id="phone" required autocomplete="off" />
+        </div>
+        <div class="col-3">
+          <label>Cidade <span class="req">*</span></label>
+          <input id="city" required autocomplete="off" />
+        </div>
+
+        <div class="col-6" id="wrapRooms">
+          <label>Ambiente <span class="req">*</span></label>
+          <input id="rooms" required autocomplete="off" />
+        </div>
+        <div class="col-3" id="wrapSource">
+          <label>Origem</label>
+          <select id="source"></select>
+        </div>
+        <div class="col-3">
+          <label>Usuário</label>
+          <select id="owner"></select>
+        </div>
+
+        <div class="col-4" id="wrapPipeline">
+          <label>Pipeline</label>
+          <select id="pipeline">
+            <option value="lead">Leads</option>
+            <option value="closed">Fechados</option>
+          </select>
+        </div>
+        <div class="col-4" id="wrapStage">
+          <label>Etapa</label>
+          <select id="stage"></select>
+        </div>
+        <div class="appointmentComposer" id="appointmentComposer">
+          <div class="appointmentComposerHd">
+            <div>
+              <div class="appointmentComposerTitle">Compromissos do cliente</div>
+              <div class="fieldHelp">Crie quantos acompanhamentos forem necessários. O mais próximo aparecerá no cartão.</div>
+            </div>
+          </div>
+
+        <div class="col-4" id="wrapNextActionDate">
+          <label>Data do novo compromisso</label>
+          <input id="nextAction" type="date" />
+        </div>
+
+        <div class="col-4">
+          <label>Horário</label>
+          <input id="nextActionTime" type="time" value="09:00" />
+        </div>
+        <div class="col-4">
+          <label>Tipo de contato</label>
+          <select id="nextActionKind">
+            <option>Follow-up</option>
+            <option>Reach-out</option>
+            <option>Phone Call</option>
+            <option>Email</option>
+            <option>Meeting</option>
+            <option>Showroom Visit</option>
+            <option>Presentation</option>
+          </select>
+        </div>
+
+        <div class="col-4">
+          <label>Duração</label>
+          <select id="nextActionDuration">
+            <option value="15">15 minutos</option>
+            <option value="30" selected>30 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">1 hora</option>
+            <option value="90">1h30</option>
+            <option value="120">2 horas</option>
+          </select>
+        </div>
+
+        <div class="col-4">
+          <label>Lembrete do calendário</label>
+          <select id="nextActionReminder">
+            <option value="0">Sem lembrete</option>
+            <option value="15">15 minutos antes</option>
+            <option value="30" selected>30 minutos antes</option>
+            <option value="60">1 hora antes</option>
+            <option value="120">2 horas antes</option>
+            <option value="1440">1 dia antes</option>
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label>Detalhes do novo compromisso</label>
+          <textarea id="nextActionDetails" placeholder="Ex.: confirmar recebimento da planta, revisar briefing e combinar data da apresentação."></textarea>
+        </div>
+
+        <div class="col-12" style="display:flex;justify-content:flex-end">
+          <button class="primary" id="btnAddAppointment" type="button">+ Adicionar compromisso</button>
+        </div>
+
+        <div class="appointmentList" id="appointmentList"></div>
+        </div>
+
+        <div class="col-4" id="wrapLeadQuality">
+          <label>Qualidade do lead</label>
+          <select id="leadQuality">
+            <option>Unreviewed</option>
+            <option>Hot</option>
+            <option>Warm</option>
+            <option>Cold</option>
+            <option>Unqualified</option>
+          </select>
+          <div class="fieldHelp">Assess project readiness, budget alignment, decision process, timeline, and fit for a high-end custom cabinetry engagement.</div>
+        </div>
+
+        <div class="col-6" id="wrapSpecifierType" style="display:none;">
+          <label>Tipo de especificador</label>
+          <select id="specifierType">
+            <option>Arquiteto</option>
+            <option>Designer de interiores</option>
+            <option>Corretor</option>
+            <option>Construtor</option>
+            <option>Outro parceiro</option>
+          </select>
+        </div>
+        <div class="col-6" id="wrapCompanyName" style="display:none;">
+          <label>Empresa / escritório</label>
+          <input id="companyName" autocomplete="off" />
+        </div>
+
+        <div class="col-6">
+          <label>E-mail</label>
+          <input id="email" type="email" placeholder="opcional" autocomplete="off" />
+        </div>
+        <div class="col-3" id="wrapEstimate">
+          <label>Estimated value (USD)</label>
+          <input id="estimate" type="number" min="0" step="100" placeholder="opcional" />
+        </div>
+        <div class="col-3" id="wrapLostReason" style="display:none;">
+          <label>Motivo (Perdido)</label>
+          <select id="lostReason"></select>
+        </div>
+
+        <div class="col-4 leadDiscoveryField">
+          <label>Situação do imóvel</label>
+          <select id="propertyStatus">
+            <option>Não informado</option>
+            <option>Pronto</option>
+            <option>Em obra</option>
+            <option>Em construção</option>
+            <option>Ainda não iniciado</option>
+          </select>
+        </div>
+        <div class="col-4 leadDiscoveryField">
+          <label>Arquiteto ou designer</label>
+          <input id="professionalName" placeholder="Nome do profissional, se houver" />
+        </div>
+        <div class="col-4 leadDiscoveryField">
+          <label>Possui planta?</label>
+          <select id="hasFloorPlan">
+            <option value="">Não informado</option>
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+        <div class="col-4 leadDiscoveryField">
+          <label>Caminho de investimento</label>
+          <select id="investmentProfile">
+            <option>A definir</option>
+            <option>Essencial</option>
+            <option>Equilibrado</option>
+            <option>Completo</option>
+          </select>
+        </div>
+        <div class="col-4 leadDiscoveryField">
+          <label>Prazo para decisão</label>
+          <input id="decisionDueAt" type="date" />
+        </div>
+        <div class="col-4 leadDiscoveryField">
+          <label>Canal preferido</label>
+          <select id="preferredContact">
+            <option>Email</option>
+            <option>Phone</option>
+            <option>Website Form</option>
+            <option>Showroom Visit</option>
+            <option>Referral</option>
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label>Observações</label>
+          <textarea id="notes"></textarea>
+        </div>
+
+        <div class="col-12" id="scheduleNotice">
+          <div class="formNotice" id="outlookScheduleNotice">Every active opportunity must have an owner, a next action, and a next-action date.</div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modalFt">
+      <div class="note" id="modalFootNote">Atalhos: Fechou / Perdeu / Excluir.</div>
+
+      <div class="modalQuick">
+        <button class="ghost" id="btnCancel">Cancelar</button>
+        <button class="primary" id="btnSave">Salvar</button>
+        <button class="primary" id="btnOutlook">Salvar e criar compromisso</button>
+        <button class="ghost" id="btnLogContact">Registrar contato agora</button>
+        <button class="primary" id="btnQuickClosed" style="border-color: rgba(76,237,187,.75); background: rgba(76,237,187,.14)">Fechou</button>
+        <button class="ghost" id="btnQuickLost" style="border-color: rgba(255,216,138,.65); background: rgba(255,216,138,.10)">Perdeu</button>
+        <button class="danger" id="btnQuickDelete">Excluir</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Pending item modal -->
+  <dialog id="pendingModal">
+    <div class="modalHd">
+      <div>
+        <div class="modalTitle" id="pendingModalTitle">Nova pendência</div>
+        <div class="modalSub">Assistências, vistorias, peças e compras fora do pipeline comercial.</div>
+      </div>
+      <button class="ghost" id="btnClosePending">Fechar</button>
+    </div>
+    <div class="modalBd">
+      <form class="form" id="pendingForm" autocomplete="off">
+        <input type="hidden" id="pendingId" />
+        <div class="col-6">
+          <label>Título <span class="req">*</span></label>
+          <input id="pendingTitle" required placeholder="Ex.: Regular porta do armário da cozinha" />
+        </div>
+        <div class="col-3">
+          <label>Tipo</label>
+          <select id="pendingType">
+            <option>Assistência técnica</option>
+            <option>Vistoria</option>
+            <option>Pedir peça</option>
+            <option>Comprar item</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <label>Prioridade</label>
+          <select id="pendingPriority">
+            <option>Baixa</option>
+            <option selected>Normal</option>
+            <option>Alta</option>
+            <option>Urgente</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <label>Cliente</label>
+          <input id="pendingCustomer" placeholder="Nome do cliente" />
+        </div>
+        <div class="col-4">
+          <label>Telefone</label>
+          <input id="pendingPhone" placeholder="Phone number" />
+        </div>
+        <div class="col-4">
+          <label>Responsável</label>
+          <select id="pendingOwner"></select>
+        </div>
+        <div class="col-4">
+          <label>Cidade</label>
+          <input id="pendingCity" />
+        </div>
+        <div class="col-8">
+          <label>Endereço</label>
+          <input id="pendingAddress" />
+        </div>
+        <div class="col-4">
+          <label>Prazo</label>
+          <input id="pendingDueDate" type="date" />
+        </div>
+        <div class="col-4">
+          <label>Horário</label>
+          <input id="pendingDueTime" type="time" value="09:00" />
+        </div>
+        <div class="col-12">
+          <label>Descrição e próximos passos</label>
+          <textarea id="pendingDescription" placeholder="Descreva a situação, medidas já tomadas, peças necessárias e o próximo passo."></textarea>
+        </div>
+        <div class="col-12">
+          <label>Fotos da situação</label>
+          <input id="pendingPhotos" type="file" accept="image/jpeg,image/png,image/webp,image/heic" multiple />
+          <div class="photoHelp">Até 6 fotos por envio, com no máximo 8 MB cada.</div>
+          <div class="photoGrid" id="pendingPhotoGrid"></div>
+        </div>
+      </form>
+    </div>
+    <div class="modalFt">
+      <div class="note" id="pendingStatusNote">A pendência ficará visível até ser concluída.</div>
+      <div class="modalQuick">
+        <button class="ghost" id="btnCancelPending">Cancelar</button>
+        <button class="primary" id="btnSavePending">Salvar pendência</button>
+        <button class="primary successAction" id="btnCompletePending">Concluir</button>
+        <button class="danger" id="btnDeletePending">Excluir</button>
+      </div>
+    </div>
+  </dialog>
+
+</div>
+
+<!-- Supabase via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config/company-config.js"></script>
+<script src="config/branding-config.js"></script>
+<script src="config/theme-config.js"></script>
+<script src="config/locale-config.js"></script>
+<script src="config/pipeline-config.js"></script>
+<script src="config/lead-classification-config.js"></script>
+<script src="config/partner-classification-config.js"></script>
+<script src="config/field-config.js"></script>
+<script src="config/integrations-config.js"></script>
+<script src="config/measurement-config.js"></script>
+<script src="config/runtime-config.js" onerror="window.MAREL_RUNTIME=Object.freeze({supabaseUrl:'',supabasePublishableKey:'',publicUrl:''})"></script>
+<script src="js/config-loader.js"></script>
+
+<script>
+/*
+  ====== CONFIGURE AQUI ======
+  1) Crie um projeto no Supabase
+  2) Pegue URL e ANON KEY em: Project Settings > API
+*/
+const SUPABASE_URL = window.APP_CONFIG?.runtime?.supabaseUrl || "";
+const SUPABASE_ANON_KEY = window.APP_CONFIG?.runtime?.supabasePublishableKey || "";
+
+/* ===== Funis ===== */
+const LEAD_STAGES = window.APP_CONFIG.pipelines.sales.slice();
+const CLOSED_STAGES = window.APP_CONFIG.pipelines.delivery.slice();
+const SPECIFIER_STAGES = window.APP_CONFIG.pipelines.partners.slice();
+const SPECIFIER_TYPES = window.APP_CONFIG.partners.types.slice();
+const LEAD_QUALITIES = window.APP_CONFIG.leads.temperatures.slice();
+const PENDING_TYPES = ["Assistência técnica","Vistoria","Pedir peça","Comprar item","Outro"];
+const STAGE_PHASES = {
+  "New Lead":"Acquire", "Lead Review":"Acquire", "Qualified":"Qualify", "Consultation Scheduled":"Qualify",
+  "Discovery":"Discover", "Awaiting Plans / Measurements":"Discover", "Design in Progress":"Design",
+  "Proposal Ready":"Propose", "Proposal Presented":"Propose", "Follow-Up":"Advance", "Negotiation":"Advance",
+  "Contract Sent":"Close", "Won":"Closed", "On Hold":"Paused", "Lost":"Closed"
+};
+const DEFAULT_SOURCES = window.APP_CONFIG.leads.sources.slice();
+const DEFAULT_LOST_REASONS = ["Preço","Prazo","Concorrente","Sem retorno (sumiu)","Mudou de ideia","Sem orçamento no momento","Outro"];
+
+/* ===== DB tables (SQL no guia) ===== */
+const TBL_RECORDS = "crm_records";
+const TBL_PROFILES = "crm_profiles";
+const TBL_CONFIG = "crm_config"; // id=1, sources jsonb, lost_reasons jsonb
+const TBL_EVENTS = "crm_record_events";
+const TBL_WEEKLY_REPORTS = "crm_weekly_reports";
+const TBL_PENDING = "crm_pending_items";
+const TBL_PENDING_ATTACHMENTS = "crm_pending_attachments";
+const TBL_PARTNER_CONTENTS = "crm_partner_contents";
+const PENDING_PHOTO_BUCKET = "crm-pending-photos";
+
+/* ===== Helpers ===== */
+const $ = (id) => document.getElementById(id);
+function nowISO(){ return new Date().toISOString(); }
+function toDate(d){ if(!d) return null; const [y,m,dd]=d.split("-").map(Number); return new Date(y,m-1,dd); }
+function daysBetween(a,b){ return Math.floor((b-a)/(1000*60*60*24)); }
+function fmtBRDate(iso){ if(!iso) return "—"; return new Date(iso).toLocaleDateString(window.APP_CONFIG.locale.language, {timeZone:window.APP_CONFIG.locale.timezone}); }
+function fmtBRDateTime(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString(window.APP_CONFIG.locale.language, {timeZone:window.APP_CONFIG.locale.timezone, month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"});
+}
+function escapeHtml(s){ return (s??"").toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._tm); toast._tm=setTimeout(()=>t.classList.remove("show"),2400); }
+function recordType(r){ return r?.record_type === "specifier" ? "specifier" : "lead"; }
+function isSpecifier(r){ return recordType(r) === "specifier"; }
+function localScheduleIso(dateValue, timeValue="09:00"){
+  if(!dateValue) return null;
+  const parsed = new Date(`${dateValue}T${timeValue || "09:00"}:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+function normalizeAppointments(record){
+  const stored = Array.isArray(record?.appointments) ? record.appointments : [];
+  if(stored.length) return stored.map(item=>({
+    id:item.id || crypto.randomUUID(),
+    starts_at:item.starts_at || null,
+    kind:item.kind || "Follow-up",
+    details:item.details || null,
+    duration_minutes:Number(item.duration_minutes || 30),
+    reminder_minutes:Number(item.reminder_minutes ?? 30),
+    status:item.status || "scheduled",
+    event_id:item.event_id || null,
+    web_link:item.web_link || null,
+    synced_at:item.synced_at || null
+  })).filter(item=>item.starts_at);
+  const legacy = getLegacyNextActionAt(record);
+  return legacy ? [{
+    id:crypto.randomUUID(), starts_at:legacy.toISOString(),
+    kind:record?.next_action_kind || "Follow-up", details:record?.next_action_details || null,
+    duration_minutes:Number(record?.next_action_duration_minutes || 30),
+    reminder_minutes:Number(record?.next_action_reminder_minutes ?? 30), status:"scheduled",
+    event_id:record?.outlook_event_id || null, web_link:record?.outlook_event_web_link || null,
+    synced_at:record?.outlook_synced_at || null
+  }] : [];
+}
+function getLegacyNextActionAt(r){
+  if(r?.next_action_at){
+    const parsed = new Date(r.next_action_at);
+    if(!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  if(r?.next_action){
+    const parsed = new Date(`${r.next_action}T09:00:00`);
+    if(!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+}
+function scheduledAppointments(record){
+  return normalizeAppointments(record)
+    .filter(item=>item.status === "scheduled" && item.starts_at)
+    .sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+}
+function getNextActionAt(r){
+  const now = Date.now();
+  const scheduled = scheduledAppointments(r);
+  const upcoming = scheduled.find(item=>new Date(item.starts_at).getTime() >= now);
+  const selected = upcoming || scheduled[0];
+  if(selected){
+    const parsed = new Date(selected.starts_at);
+    if(!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return getLegacyNextActionAt(r);
+}
+function inputDateValue(date){
+  if(!date || Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  const d = String(date.getDate()).padStart(2,"0");
+  return `${y}-${m}-${d}`;
+}
+function inputTimeValue(date){
+  if(!date || Number.isNaN(date.getTime())) return "09:00";
+  return `${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
+}
+function scheduleStatus(r){
+  const next = getNextActionAt(r);
+  if(!next) return {kind:"warn", label:"Sem próximo acompanhamento"};
+  const diffHours = (next.getTime() - Date.now()) / 3600000;
+  const nextAppointment = scheduledAppointments(r).find(item=>new Date(item.starts_at).getTime()===next.getTime());
+  const action = nextAppointment?.kind || r.next_action_kind || "Acompanhamento";
+  if(diffHours < 0) return {kind:"late", label:`${action} atrasado • ${fmtBRDateTime(next.toISOString())}`};
+  if(diffHours <= 168) return {kind:"ok", label:`${action} • ${fmtBRDateTime(next.toISOString())}`};
+  return {kind:"ok", label:`${action} agendado • ${fmtBRDateTime(next.toISOString())}`};
+}
+async function callOutlook(action, payload={}){
+  if(!sb || !session?.access_token) throw new Error("Entre no CRM novamente.");
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/outlook-calendar`, {
+    method:"POST",
+    headers:{
+      "content-type":"application/json",
+      "apikey":SUPABASE_ANON_KEY,
+      "authorization":`Bearer ${session.access_token}`
+    },
+    body:JSON.stringify({action, ...payload})
+  });
+  const result = await response.json().catch(()=>({}));
+  if(!response.ok) throw new Error(result.error || "Falha na integração com o calendário.");
+  return result;
+}
+async function fetchOutlookStatus(){
+  if(!session?.user) return false;
+  try{
+    outlookStatus = await callOutlook("status");
+    return true;
+  }catch(error){
+    console.warn("[CRM Outlook] Status indisponível.", error);
+    outlookStatus = {configured:false, connected:false, account_email:null, provider:null};
+    return false;
+  }
+}
+async function saveOutlookEvent(recordId, appointmentId){
+  const result = await callOutlook("create_event", {record_id:recordId, appointment_id:appointmentId});
+  const record = records.find(r=>r.id===recordId);
+  if(record){
+    const appointments = normalizeAppointments(record);
+    const appointment = appointments.find(item=>item.id===appointmentId);
+    if(appointment){
+      appointment.event_id = result.event_id;
+      appointment.web_link = result.web_link;
+      appointment.synced_at = nowISO();
+      record.appointments = appointments;
+    }
+  }
+  return result;
+}
+function handleOutlookReturn(){
+  const url = new URL(window.location.href);
+  const state = url.searchParams.get("outlook");
+  if(!state) return;
+  if(state === "connected") toast("Marel calendar connected.");
+  else if(state === "wrong_account") toast("Connect the approved Marel calendar account.");
+  else toast("Não foi possível conectar o calendário.");
+  url.searchParams.delete("outlook");
+  url.searchParams.delete("reason");
+  url.searchParams.delete("email");
+  history.replaceState({}, "", url.pathname + url.search + url.hash);
+}
+
+// ===== Sound notification (Lead Online) =====
+let soundEnabled = localStorage.getItem("crm_sound_enabled") === "1";
+let audioUnlocked = false;
+let audioCtx = null;
+const NOTIFIED_IDS_KEY = "crm_notified_online_leads";
+const MAX_NOTIFIED_IDS = 300;
+let notifiedRecordIds = new Set();
+
+try{
+  const savedIds = JSON.parse(localStorage.getItem(NOTIFIED_IDS_KEY) || "[]");
+  if(Array.isArray(savedIds)) notifiedRecordIds = new Set(savedIds.slice(-MAX_NOTIFIED_IDS));
+}catch(error){
+  console.warn("Preferência de notificações inválida; recriando.", error);
+}
+
+function updateSoundBtn(){
+  const b = document.getElementById("btnSound");
+  if(!b) return;
+  b.textContent = `Som: ${soundEnabled ? "ON" : "OFF"}`;
+}
+
+function unlockAudio(){
+  if(audioUnlocked) return;
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume?.();
+  audioUnlocked = true;
+}
+
+function beep(){
+  if(!soundEnabled) return;
+  if(!audioUnlocked) return; // navegador exige 1 clique do usuário antes
+  try{
+    const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx = ctx;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.value = 0.05;
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.start();
+    setTimeout(()=>{ o.stop(); }, 140);
+  }catch(e){
+    // ignore
+  }
+}
+
+function rememberNotifiedRecord(id){
+  if(!id) return;
+  notifiedRecordIds.add(id);
+  const ids = Array.from(notifiedRecordIds).slice(-MAX_NOTIFIED_IDS);
+  notifiedRecordIds = new Set(ids);
+  localStorage.setItem(NOTIFIED_IDS_KEY, JSON.stringify(ids));
+}
+
+function notifyOnlineLeadOnce(record, origin="sincronização"){
+  if(!hasInitialRecordSnapshot || !record?.id) return false;
+  if(record.pipeline !== "lead" || (record.source || "") !== "Lead Online") return false;
+  if(notifiedRecordIds.has(record.id)) return false;
+
+  rememberNotifiedRecord(record.id);
+  beep();
+  const name = [record.first_name, record.last_name].filter(Boolean).join(" ").trim() || "Lead Online";
+  toast(`Novo lead online: ${name}`);
+  console.info("[CRM Sync] Novo lead online detectado.", { id: record.id, origin });
+  return true;
+}
+
+document.getElementById("btnSound")?.addEventListener("click", ()=>{
+  soundEnabled = !soundEnabled;
+  localStorage.setItem("crm_sound_enabled", soundEnabled ? "1" : "0");
+  unlockAudio(); // 1º clique libera áudio
+  updateSoundBtn();
+  toast(soundEnabled ? "Som ativado." : "Som desativado.");
+});
+
+updateSoundBtn();
+function slugifyStage(stage){
+  return stage.toLowerCase()
+    .replaceAll("ç","c")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/(^-|-$)/g,"");
+}
+function stageClass(stage){ return "s-" + slugifyStage(stage); }
+function normalizeLeadStage(stage){
+  if(!stage) return LEAD_STAGES[0];
+  const legacy = {
+    "Novo":"New Lead", "Agendamento de medida":"Consultation Scheduled",
+    "Atendimento Inicial":"Lead Review", "Só quer preço":"Qualified",
+    "Projeto":"Design in Progress", "Apresentação":"Proposal Presented",
+    "Enrolação":"Follow-Up", "Perdido":"Lost"
+  };
+  if(legacy[stage]) return legacy[stage];
+  return stage;
+}
+function normalizeClosedStage(stage){
+  const legacy={
+    "Contrato Realizado":"Deposit Received", "Contrato realizado":"Deposit Received",
+    "Medição Técnica":"Final Measurements", "Medição final":"Final Measurements",
+    "Projeto Executivo":"Technical Review", "Projeto executivo":"Technical Review",
+    "Pedido":"Production Ready", "Pedido em fábrica":"Production Ready",
+    "Liberação Fábrica":"Production in Brazil", "Produção e transporte":"Production in Brazil",
+    "Agendamento de Montagem":"Delivery Scheduled", "Montagem agendada":"Delivery Scheduled",
+    "Montagem":"Installation", "Entrega":"Final Walkthrough", "Entrega técnica":"Final Walkthrough",
+    "Pós Venda":"Warranty / Aftercare", "Pós-venda":"Warranty / Aftercare"
+  };
+  return legacy[stage] || stage || CLOSED_STAGES[0];
+}
+function fullName(r){ return [r.first_name, r.last_name].filter(Boolean).join(" ").trim() || "Sem nome"; }
+function stageAge(r){
+  const entered = new Date(r.stage_entered_at || r.updated_at || r.created_at);
+  const age = daysBetween(entered, new Date());
+  return {age, date: fmtBRDate(entered.toISOString())};
+}
+function fillSelect(el, arr, selected){
+  el.innerHTML = arr.map(v=>`<option ${v===selected?"selected":""}>${escapeHtml(v)}</option>`).join("");
+}
+function stageOptionsForPipeline(p){ return p==="closed" ? CLOSED_STAGES : LEAD_STAGES; }
+function stageOptionsForRecord(kind, pipeline="lead"){
+  return kind === "specifier" ? SPECIFIER_STAGES : stageOptionsForPipeline(pipeline);
+}
+
+/* ===== App state ===== */
+let sb = null;
+let session = null;
+let currentTab = "leads";
+let hideLostColumn = localStorage.getItem("crm_hide_lost") === "1";
+const filters = { owner:"Todos", source:"Todos", city:"", search:"" };
+let isDragging = false;
+let justDraggedAt = 0;
+let currentEditingId = null;
+let appointmentDrafts = [];
+
+let config = { sources: DEFAULT_SOURCES.slice(), lost_reasons: DEFAULT_LOST_REASONS.slice() };
+let profiles = [];   // [{id, display_name}]
+let records = [];    // crm_records rows
+let recordEvents = []; // histórico de movimentações e contatos
+let partnerContents = []; // banco de conteúdos para parceiros
+let eventsSupported = true;
+let weeklyReports = [];
+let weeklyReportsSupported = true;
+let pendingItems = [];
+let pendingAttachments = [];
+let pendingPhotosBuffer = [];
+let pendingSupported = true;
+let showCompletedPending = false;
+let outlookStatus = { configured:false, connected:false, account_email:null, provider:null };
+let hasInitialWeeklySnapshot = false;
+let hasInitialRecordSnapshot = false;
+let recordsFetchPromise = null;
+let recordsRefreshQueued = false;
+let bootPromise = null;
+let bootedUserId = null;
+let appDataState = "loading";
+let appDataTitle = "Carregando seus dados";
+let appDataMessage = "Waiting for an independent Marel data connection…";
+let deferredInstallPrompt = null;
+
+let syncConnectionState = "offline";
+let lastSuccessfulSyncAt = null;
+
+function isMobileLayout(){ return window.matchMedia("(max-width: 760px)").matches; }
+function setAppDataState(state, title, message){
+  appDataState = state;
+  appDataTitle = title;
+  appDataMessage = message;
+  updateAppStateBanner();
+}
+function updateAppStateBanner(){
+  const banner = $("appStateBanner");
+  if(!banner) return;
+  banner.className = `appStateBanner ${appDataState}`;
+  $("appStateTitle").textContent = appDataTitle;
+  $("appStateMessage").textContent = appDataMessage;
+  $("btnRetryLoad").hidden = appDataState !== "error";
+}
+function statePanelHtml(){
+  const title = appDataState === "auth" ? "Entre para ver os dados" : appDataTitle;
+  const message = appDataState === "auth"
+    ? "Os leads, clientes fechados e pendências ficam na base compartilhada e aparecem depois do login."
+    : appDataMessage;
+  return `<div class="statePanel"><div class="statePanelInner"><h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p></div></div>`;
+}
+
+function syncAgeLabel(){
+  if(!lastSuccessfulSyncAt) return "aguardando atualização";
+  const seconds = Math.max(0, Math.floor((Date.now() - lastSuccessfulSyncAt) / 1000));
+  if(seconds < 10) return "atualizado agora";
+  if(seconds < 60) return `atualizado há ${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `atualizado há ${minutes}min`;
+}
+
+function updateSyncStatusDisplay(){
+  const el = $("syncStatus");
+  if(!el) return;
+
+  el.className = `syncStatus ${syncConnectionState}`;
+  if(syncConnectionState === "online") el.textContent = `Online • ${syncAgeLabel()}`;
+  else if(syncConnectionState === "reconnecting") el.textContent = "Reconectando...";
+  else if(syncConnectionState === "error") el.textContent = "Falha na sincronização";
+  else el.textContent = "Sem conexão";
+}
+
+function setSyncConnectionState(state){
+  syncConnectionState = state;
+  updateSyncStatusDisplay();
+}
+
+/* ===== Auth + Init ===== */
+function isConfigured(){
+  return SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20;
+}
+function updateSessionLine(){
+  const el = $("sessionLine");
+  if(!isConfigured()){
+    el.textContent = "Safe offline template. Configure the independent Marel Supabase project to enable sign-in and sync.";
+    return;
+  }
+  if(!session?.user){
+    el.textContent = "Desconectado. Clique em “Entrar” (ou recarregue) para autenticar.";
+    return;
+  }
+  el.textContent = `Conectado: ${session.user.email}`;
+}
+async function initSupabase(){
+  if(!isConfigured()) return;
+  setAppDataState("loading", "Loading your data", "Connecting to the independent Marel workspace…");
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { data, error } = await sb.auth.getSession();
+  if(error){
+    console.error("[CRM Auth] Falha ao recuperar sessão.", error);
+    toast("Não foi possível recuperar a sessão.");
+  }
+  session = data.session;
+  updateSessionLine();
+
+  sb.auth.onAuthStateChange((event, newSession) => {
+    // Evita chamadas assíncronas dentro do callback interno do cliente Supabase.
+    setTimeout(() => handleAuthStateChange(event, newSession), 0);
+  });
+
+  if(!session?.user){
+    setAppDataState("auth", "Login necessário", "Entre com um usuário autorizado para carregar a base compartilhada.");
+    render();
+    openLogin();
+  }else{
+    await bootAfterLogin();
+  }
+}
+
+async function handleAuthStateChange(event, newSession){
+  const previousUserId = session?.user?.id || null;
+  session = newSession;
+  updateSessionLine();
+  console.info("[CRM Auth] Estado alterado.", { event, authenticated: Boolean(session?.user) });
+
+  if(!session?.user){
+    bootedUserId = null;
+    hasInitialRecordSnapshot = false;
+    await syncController.stop();
+    lockApp();
+    openLogin();
+    return;
+  }
+
+  const userChanged = previousUserId !== session.user.id;
+  if(userChanged || bootedUserId !== session.user.id){
+    await bootAfterLogin();
+    return;
+  }
+
+  if(event === "TOKEN_REFRESHED"){
+    await syncController.resume("token atualizado");
+  }else if(event === "SIGNED_IN"){
+    await syncController.resume("sessão confirmada");
+  }
+}
+
+function lockApp(){
+  // clear in-memory data (UI will show empty until login)
+  records = [];
+  profiles = [];
+  recordEvents = [];
+  weeklyReports = [];
+  pendingItems = [];
+  pendingAttachments = [];
+  hasInitialRecordSnapshot = false;
+  hasInitialWeeklySnapshot = false;
+  setSyncConnectionState("offline");
+  setAppDataState("auth", "Login necessário", "Entre novamente para carregar os dados compartilhados do CRM.");
+  render();
+}
+function openLogin(){
+  $("btnCloseLogin").hidden = !session?.user;
+  if(!$("loginModal").open) $("loginModal").showModal();
+}
+function closeLogin(){
+  if(!session?.user) return;
+  $("loginModal").close();
+}
+async function doLogin(){
+  if(!sb) return toast("Supabase não configurado.");
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPass").value;
+  if(!email || !password) return toast("Informe e-mail e senha.");
+  const button = $("btnLogin");
+  button.disabled = true;
+  button.textContent = "Entrando…";
+  setAppDataState("loading", "Carregando seus dados", "Login confirmado. Buscando leads, fechados e pendências…");
+  render();
+  try{
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    session = data.session;
+    updateSessionLine();
+    await bootAfterLogin();
+    if(bootedUserId === session?.user?.id) closeLogin();
+  }catch(error){
+    console.error("[CRM Auth] Login falhou.", error);
+    setAppDataState("auth", "Não foi possível entrar", "Confira o e-mail, a senha e sua conexão com a internet.");
+    $("loginNote").textContent = "Login não realizado. Confira o e-mail e a senha e tente novamente.";
+    toast("Login falhou. Verifique usuário e senha.");
+    render();
+  }finally{
+    button.disabled = false;
+    button.textContent = "Entrar";
+  }
+}
+async function doSignOut(){
+  if(!sb) return;
+  await syncController.stop();
+  await sb.auth.signOut();
+  toast("Saiu.");
+}
+
+/* ===== Data bootstrap ===== */
+async function ensureProfile(){
+  const uid = session.user.id;
+  const { data, error } = await sb.from(TBL_PROFILES).select("id, display_name").eq("id", uid).maybeSingle();
+  if(error) return toast("Erro ao ler perfil.");
+
+  if(!data){
+    const display = prompt("Seu nome para exibir no CRM (ex.: Marianna):");
+    const name = (display||"").trim() || "Usuário";
+    const ins = await sb.from(TBL_PROFILES).insert({ id: uid, display_name: name });
+    if(ins.error) return toast("Erro ao criar perfil.");
+  }
+}
+
+async function ensureConfigRow(){
+  // id=1
+  const { data, error } = await sb.from(TBL_CONFIG).select("id, sources, lost_reasons").eq("id", 1).maybeSingle();
+  if(error){
+    toast("Erro ao ler config.");
+    return;
+  }
+  if(!data){
+    const { error: insErr } = await sb.from(TBL_CONFIG).insert({ id: 1, sources: DEFAULT_SOURCES, lost_reasons: DEFAULT_LOST_REASONS });
+    if(insErr) toast("Erro ao criar config.");
+  }
+}
+
+async function fetchConfig(){
+  const { data, error } = await sb.from(TBL_CONFIG).select("id, sources, lost_reasons").eq("id", 1).single();
+  if(error) return toast("Erro ao carregar config.");
+  config.sources = Array.isArray(data.sources) ? data.sources : DEFAULT_SOURCES.slice();
+  config.lost_reasons = Array.isArray(data.lost_reasons) ? data.lost_reasons : DEFAULT_LOST_REASONS.slice();
+}
+
+async function fetchProfiles(){
+  const { data, error } = await sb.from(TBL_PROFILES).select("id, display_name").order("display_name", { ascending: true });
+  if(error) return toast("Erro ao carregar usuários.");
+  profiles = data || [];
+}
+
+async function fetchRecordEvents(){
+  if(!sb || !session?.user || !eventsSupported) return false;
+  const since = new Date(Date.now() - 60*24*60*60*1000).toISOString();
+  const { data, error } = await sb
+    .from(TBL_EVENTS)
+    .select("*")
+    .gte("occurred_at", since)
+    .order("occurred_at", { ascending:false })
+    .limit(1500);
+
+  if(error){
+    const missingTable = ["42P01","PGRST205"].includes(error.code);
+    if(missingTable){
+      eventsSupported = false;
+      console.info("[CRM Relatórios] Histórico ainda não está disponível; aplique a migração nova.");
+    }else{
+      console.warn("[CRM Relatórios] Falha ao carregar histórico.", error);
+    }
+    return false;
+  }
+
+  recordEvents = data || [];
+  return true;
+}
+
+async function fetchWeeklyReports(){
+  if(!sb || !session?.user || !weeklyReportsSupported) return false;
+  const previousLatestId = weeklyReports[0]?.id || null;
+  const { data, error } = await sb
+    .from(TBL_WEEKLY_REPORTS)
+    .select("*")
+    .order("week_start", { ascending:false })
+    .limit(12);
+
+  if(error){
+    const missingTable = ["42P01","PGRST205"].includes(error.code);
+    if(missingTable) weeklyReportsSupported = false;
+    else console.warn("[CRM Relatórios] Falha ao carregar resumos semanais.", error);
+    return false;
+  }
+  weeklyReports = data || [];
+  const latestId = weeklyReports[0]?.id || null;
+  if(hasInitialWeeklySnapshot && latestId && latestId !== previousLatestId){
+    toast("Novo resumo semanal disponível em Relatórios.");
+  }
+  hasInitialWeeklySnapshot = true;
+  return true;
+}
+
+async function fetchPendingData(){
+  if(!sb || !session?.user || !pendingSupported) return false;
+  const [itemsResult, attachmentsResult] = await Promise.all([
+    sb.from(TBL_PENDING).select("*").order("created_at", {ascending:false}),
+    sb.from(TBL_PENDING_ATTACHMENTS).select("*").order("created_at", {ascending:true})
+  ]);
+  const error = itemsResult.error || attachmentsResult.error;
+  if(error){
+    if(["42P01","PGRST205"].includes(error.code)) pendingSupported = false;
+    else console.warn("[CRM Pendências] Falha ao carregar.", error);
+    return false;
+  }
+  pendingItems = itemsResult.data || [];
+  pendingAttachments = await Promise.all((attachmentsResult.data || []).map(async attachment=>{
+    const {data} = await sb.storage.from(PENDING_PHOTO_BUCKET).createSignedUrl(attachment.object_path, 3600);
+    return {...attachment, signed_url:data?.signedUrl || null};
+  }));
+  return true;
+}
+
+function recordsStateVersion(items){
+  return items
+    .map(record => [record.id, record.updated_at, record.pipeline, record.stage].join(":"))
+    .sort()
+    .join("|");
+}
+
+async function fetchRecords({ reason="sincronização", notifyNew=true, showError=false }={}){
+  if(!sb || !session?.user) return false;
+
+  if(recordsFetchPromise){
+    recordsRefreshQueued = true;
+    return recordsFetchPromise;
+  }
+
+  const previousIds = new Set(records.map(record => record.id));
+  const previousVersion = recordsStateVersion(records);
+  const hadInitialSnapshot = hasInitialRecordSnapshot;
+
+  recordsFetchPromise = (async () => {
+    const { data, error } = await sb
+      .from(TBL_RECORDS)
+      .select("*")
+      .order("stage_entered_at", { ascending: false });
+
+    if(error) throw error;
+
+    const loadedRecords = data || [];
+    const changed = previousVersion !== recordsStateVersion(loadedRecords);
+    records = loadedRecords;
+    if(hadInitialSnapshot && notifyNew){
+      records
+        .filter(record => !previousIds.has(record.id))
+        .forEach(record => notifyOnlineLeadOnce(record, reason));
+    }
+
+    hasInitialRecordSnapshot = true;
+    lastSuccessfulSyncAt = Date.now();
+    if(changed || reason !== "polling de segurança") render();
+    updateSyncStatusDisplay();
+    console.info("[CRM Sync] Registros atualizados.", { reason, total: records.length, changed });
+    return true;
+  })().catch(error => {
+    console.error("[CRM Sync] Erro ao carregar registros.", { reason, error });
+    setSyncConnectionState(navigator.onLine ? "error" : "offline");
+    if(showError) toast("Erro ao sincronizar. Tente novamente.");
+    return false;
+  }).finally(() => {
+    recordsFetchPromise = null;
+    if(recordsRefreshQueued){
+      recordsRefreshQueued = false;
+      setTimeout(() => syncController.refresh("atualização pendente", true), 100);
+    }
+  });
+
+  return recordsFetchPromise;
+}
+
+function profileNameById(id){
+  const p = profiles.find(x=>x.id===id);
+  return p ? p.display_name : "—";
+}
+
+async function bootAfterLogin(){
+  if(!sb || !session?.user) return;
+  if(bootedUserId === session.user.id){
+    await syncController.start();
+    return;
+  }
+  if(bootPromise) return bootPromise;
+
+  const userId = session.user.id;
+  setAppDataState("loading", "Carregando seus dados", "Buscando leads, clientes fechados e pendências…");
+  render();
+  bootPromise = (async () => {
+    hasInitialRecordSnapshot = false;
+    hasInitialWeeklySnapshot = false;
+    setSyncConnectionState(navigator.onLine ? "reconnecting" : "offline");
+    await ensureConfigRow();
+    await ensureProfile();
+    await Promise.all([fetchConfig(), fetchProfiles()]);
+    buildFilters();
+    const loaded = await fetchRecords({ reason:"carga inicial", notifyNew:false, showError:true });
+    if(!loaded) throw new Error("Não foi possível carregar os registros compartilhados.");
+    await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus(), typeof partnerFetchContents === "function" ? partnerFetchContents() : Promise.resolve()]);
+    bootedUserId = userId;
+    setAppDataState("ready", "Dados carregados", `${records.length} registros e ${pendingItems.length} pendências sincronizados.`);
+    render();
+    if($("loginModal").open) closeLogin();
+    await syncController.start();
+  })().catch(error => {
+    console.error("[CRM Boot] Falha ao iniciar aplicação.", error);
+    setAppDataState("error", "Não foi possível carregar os dados", "Sua base continua segura. Verifique a conexão e toque em “Tentar novamente”.");
+    render();
+    toast("Falha ao carregar os dados. Tente novamente.");
+    setSyncConnectionState("error");
+  }).finally(() => {
+    bootPromise = null;
+  });
+
+  return bootPromise;
+}
+
+/* ===== Sincronização resiliente: Realtime + polling ===== */
+const syncController = (() => {
+  const POLL_INTERVAL_MS = 45000;
+  const WAKE_CHECK_INTERVAL_MS = 15000;
+  const WAKE_GAP_MS = 45000;
+  const MAX_RECONNECT_DELAY_MS = 30000;
+
+  let channel = null;
+  let channelGeneration = 0;
+  let reconnectAttempt = 0;
+  let reconnectTimer = null;
+  let refreshDebounceTimer = null;
+  let pollingTimer = null;
+  let wakeTimer = null;
+  let statusTimer = null;
+  let started = false;
+  let lifecycleBound = false;
+  let connectPromise = null;
+  let lastWakeTick = Date.now();
+  let lastFocusRefreshAt = 0;
+
+  function clearTimer(name){
+    if(name === "reconnect" && reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer = null; }
+    if(name === "refresh" && refreshDebounceTimer){ clearTimeout(refreshDebounceTimer); refreshDebounceTimer = null; }
+  }
+
+  function scheduleRefresh(reason, notifyNew=true, delay=300){
+    clearTimer("refresh");
+    refreshDebounceTimer = setTimeout(() => {
+      refreshDebounceTimer = null;
+      refresh(reason, notifyNew);
+    }, delay);
+  }
+
+  function scheduleReconnect(reason){
+    if(!started || !session?.user || !navigator.onLine || reconnectTimer) return;
+    const delay = Math.min(1000 * (2 ** reconnectAttempt), MAX_RECONNECT_DELAY_MS);
+    reconnectAttempt = Math.min(reconnectAttempt + 1, 6);
+    setSyncConnectionState("reconnecting");
+    console.warn("[CRM Realtime] Reconexão agendada.", { reason, delay });
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connect(`reconexão: ${reason}`);
+    }, delay);
+  }
+
+  function handleRealtimeChange(payload){
+    const eventType = payload?.eventType || "UNKNOWN";
+    const record = payload?.new;
+    console.info("[CRM Realtime] Alteração recebida.", { eventType, id: record?.id || payload?.old?.id || null });
+
+    if(eventType === "INSERT" && record){
+      notifyOnlineLeadOnce(record, "realtime");
+    }
+    scheduleRefresh(`realtime ${eventType.toLowerCase()}`, true, 250);
+  }
+
+  function handlePendingRealtimeChange(payload){
+    console.info("[CRM Realtime] Pendência alterada.", {eventType:payload?.eventType || "UNKNOWN"});
+    clearTimeout(handlePendingRealtimeChange.timer);
+    handlePendingRealtimeChange.timer = setTimeout(async ()=>{
+      await fetchPendingData();
+      if(currentTab === "pending") render();
+    }, 250);
+  }
+
+  async function removeCurrentChannel(){
+    const oldChannel = channel;
+    channel = null;
+    if(!oldChannel || !sb) return;
+    try{
+      await sb.removeChannel(oldChannel);
+    }catch(error){
+      console.warn("[CRM Realtime] Falha ao remover canal anterior.", error);
+    }
+  }
+
+  async function connectInternal(reason){
+    if(!started || !sb || !session?.user) return false;
+    if(!navigator.onLine){
+      setSyncConnectionState("offline");
+      return false;
+    }
+
+    clearTimer("reconnect");
+    setSyncConnectionState("reconnecting");
+    const generation = ++channelGeneration;
+    await removeCurrentChannel();
+    if(generation !== channelGeneration || !started || !session?.user) return false;
+
+    console.info("[CRM Realtime] Criando canal único.", { reason, generation });
+    const nextChannel = sb
+      .channel(`crm_records_sync_${session.user.id}`)
+      .on(
+        "postgres_changes",
+        { event:"*", schema:"public", table:TBL_RECORDS },
+        handleRealtimeChange
+      )
+      .on(
+        "postgres_changes",
+        { event:"*", schema:"public", table:TBL_PENDING },
+        handlePendingRealtimeChange
+      )
+      .on(
+        "postgres_changes",
+        { event:"*", schema:"public", table:TBL_PENDING_ATTACHMENTS },
+        handlePendingRealtimeChange
+      );
+
+    channel = nextChannel;
+    nextChannel.subscribe((status, error) => {
+      if(generation !== channelGeneration || channel !== nextChannel) return;
+      console.info("[CRM Realtime] Estado do canal.", { status, hasError:Boolean(error) });
+
+      if(status === "SUBSCRIBED"){
+        reconnectAttempt = 0;
+        setSyncConnectionState("online");
+        scheduleRefresh("realtime conectado", true, 50);
+        return;
+      }
+
+      if(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"].includes(status)){
+        if(error) console.error("[CRM Realtime] Erro no canal.", error);
+        scheduleReconnect(status);
+      }
+    });
+    return true;
+  }
+
+  function connect(reason){
+    if(connectPromise) return connectPromise;
+    connectPromise = connectInternal(reason)
+      .catch(error => {
+        console.error("[CRM Realtime] Falha ao conectar.", error);
+        scheduleReconnect("exceção");
+        return false;
+      })
+      .finally(() => { connectPromise = null; });
+    return connectPromise;
+  }
+
+  async function refresh(reason="sincronização", notifyNew=true, showError=false){
+    const ok = await fetchRecords({ reason, notifyNew, showError });
+    if(ok){
+      await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus()]);
+      if(currentTab === "reports") render();
+    }
+    return ok;
+  }
+
+  function bindLifecycle(){
+    if(lifecycleBound) return;
+    lifecycleBound = true;
+
+    window.addEventListener("online", () => {
+      if(!started || !session?.user) return;
+      console.info("[CRM Sync] Navegador voltou a ficar online.");
+      setSyncConnectionState("reconnecting");
+      connect("navegador online");
+      scheduleRefresh("navegador online", true, 200);
+    });
+
+    window.addEventListener("offline", () => {
+      clearTimer("reconnect");
+      setSyncConnectionState("offline");
+      console.warn("[CRM Sync] Navegador sem conexão.");
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if(!started || !session?.user || document.visibilityState !== "visible") return;
+      console.info("[CRM Sync] Aba voltou a ficar visível.");
+      connect("aba visível");
+      scheduleRefresh("aba visível", true, 150);
+    });
+
+    window.addEventListener("focus", () => {
+      if(!started || !session?.user) return;
+      const now = Date.now();
+      if(now - lastFocusRefreshAt < 10000) return;
+      lastFocusRefreshAt = now;
+      connect("janela em foco");
+      scheduleRefresh("janela em foco", true, 150);
+    });
+  }
+
+  function startTimers(){
+    if(!pollingTimer){
+      pollingTimer = setInterval(() => {
+        if(!started || !session?.user || !navigator.onLine || document.visibilityState !== "visible") return;
+        refresh("polling de segurança", true);
+      }, POLL_INTERVAL_MS);
+    }
+
+    if(!wakeTimer){
+      lastWakeTick = Date.now();
+      wakeTimer = setInterval(() => {
+        const now = Date.now();
+        const gap = now - lastWakeTick;
+        lastWakeTick = now;
+        if(!started || !session?.user || gap <= WAKE_GAP_MS) return;
+        console.info("[CRM Sync] Retorno de suspensão detectado.", { gap });
+        connect("retorno de suspensão");
+        scheduleRefresh("retorno de suspensão", true, 200);
+      }, WAKE_CHECK_INTERVAL_MS);
+    }
+
+    if(!statusTimer){
+      statusTimer = setInterval(updateSyncStatusDisplay, 10000);
+    }
+  }
+
+  async function start(){
+    if(!sb || !session?.user) return;
+    bindLifecycle();
+    startTimers();
+    started = true;
+    await connect("inicialização");
+  }
+
+  async function resume(reason){
+    if(!sb || !session?.user) return;
+    if(!started) return start();
+    await connect(reason);
+    scheduleRefresh(reason, true, 150);
+  }
+
+  async function stop(){
+    started = false;
+    clearTimer("reconnect");
+    clearTimer("refresh");
+    if(pollingTimer){ clearInterval(pollingTimer); pollingTimer = null; }
+    if(wakeTimer){ clearInterval(wakeTimer); wakeTimer = null; }
+    if(statusTimer){ clearInterval(statusTimer); statusTimer = null; }
+    channelGeneration++;
+    reconnectAttempt = 0;
+    await removeCurrentChannel();
+    setSyncConnectionState("offline");
+  }
+
+  return { start, stop, resume, refresh };
+})();
+
+/* ===== Rendering ===== */
+function datasetForTab(){
+  let base = records.slice();
+  if(currentTab==="leads") base = base.filter(r=>r.pipeline==="lead" && !isSpecifier(r));
+  if(currentTab==="closed") base = base.filter(r=>r.pipeline==="closed" && !isSpecifier(r));
+  if(currentTab==="specifiers") base = base.filter(r=>isSpecifier(r));
+
+  if(currentTab==="leads" && hideLostColumn){
+    base = base.filter(r=>normalizeLeadStage(r.stage)!=="Lost");
+  }
+
+  const q = filters.search.trim().toLowerCase();
+  const city = filters.city.trim().toLowerCase();
+
+  if(filters.owner!=="Todos"){
+    // filters.owner is profile id
+    base = base.filter(r=>(r.owner_id||"")===filters.owner);
+  }
+  if(filters.source!=="Todos"){
+    base = currentTab === "specifiers"
+      ? base.filter(r=>(r.specifier_type||"")===filters.source)
+      : base.filter(r=>(r.source||"")===filters.source);
+  }
+  if(city){
+    base = base.filter(r=>(r.city||"").toLowerCase().includes(city));
+  }
+  if(q){
+    base = base.filter(r=>{
+      const hay = [r.first_name,r.last_name,r.rooms,r.notes,r.lost_reason].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  base.sort((a,b)=> new Date(b.stage_entered_at||b.updated_at||b.created_at) - new Date(a.stage_entered_at||a.updated_at||a.created_at));
+  return base;
+}
+
+function getStagesForTab(){
+  if(currentTab==="leads"){
+    return hideLostColumn ? LEAD_STAGES.filter(s=>s!=="Lost") : LEAD_STAGES;
+  }
+  if(currentTab==="closed") return CLOSED_STAGES;
+  if(currentTab==="specifiers") return SPECIFIER_STAGES;
+  return [];
+}
+
+function renderKPIs(scope){
+  const total = scope.length;
+  const now = new Date();
+  const stuck = scope.filter(r=> daysBetween(new Date(r.stage_entered_at||r.updated_at||r.created_at), now) >= 14).length;
+  const due = scope.filter(r=>{
+    const d = getNextActionAt(r); if(!d) return false;
+    const diff = (d.getTime() - now.getTime()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length;
+
+  $("kpiTotal").textContent = total;
+  $("kpiStuck").textContent = stuck;
+  $("kpiDue").textContent = due;
+  $("kpiTotalLabel").textContent = "No filtro";
+  $("kpiStuckLabel").textContent = "Parados ≥ 14d";
+  $("kpiDueLabel").textContent = "Próx. ação ≤ 7d";
+}
+
+function renderCard(r){
+  const name = fullName(r);
+  const initials = `${r.first_name?.[0] || ""}${r.last_name?.[0] || ""}`.toUpperCase() || "?";
+  const avatar = `<span class="customerAvatar customerAvatarFallback" aria-hidden="true">${escapeHtml(initials)}</span>`;
+  let st = r.stage || (r.pipeline==="lead" ? LEAD_STAGES[0] : CLOSED_STAGES[0]);
+  if(r.pipeline==="lead") st = normalizeLeadStage(st); else st = normalizeClosedStage(st);
+  const age = stageAge(r);
+  const schedule = scheduleStatus(r);
+  const appointmentCount = scheduledAppointments(r).filter(item=>new Date(item.starts_at).getTime() >= Date.now()).length;
+
+  const metaLines = [
+    `Etapa <b>${escapeHtml(age.date)}</b>`,
+    getNextActionAt(r) ? `Ação <b>${escapeHtml(fmtBRDateTime(getNextActionAt(r).toISOString()))}</b>` : ""
+  ].filter(Boolean).join(" • ");
+
+  const stuckTag = age.age >= 14
+    ? `<span class="stuckTag" style="border-color: rgba(255,128,128,.45); background: rgba(255,128,128,.14)">parado</span>`
+    : (age.age >= 7
+      ? `<span class="stuckTag" style="border-color: rgba(255,216,138,.45); background: rgba(255,216,138,.12)">atenção</span>`
+      : ``);
+
+  return `
+    <div class="card ${stageClass(st)} grab" draggable="${isMobileLayout() ? "false" : "true"}" data-id="${escapeHtml(r.id)}" title="Toque para abrir detalhes">
+      <div class="cTop">
+        <div class="customerIdentity">${avatar}<div class="cName">${escapeHtml(name)}</div></div>
+        <div class="rightTop">
+          <span class="badge" title="Responsável">${escapeHtml(profileNameById(r.owner_id))}</span>
+          ${stuckTag}
+          <button class="dots" type="button" aria-label="Menu" data-menu-btn="${escapeHtml(r.id)}">...</button>
+        </div>
+      </div>
+
+      <div class="row">
+        ${isSpecifier(r)
+          ? `<span class="chip" title="Tipo">${escapeHtml(r.specifier_type || "Parceiro")}</span>
+             <span class="chip muted" title="Empresa">${escapeHtml(r.company_name || "Empresa —")}</span>`
+          : `<span class="chip" title="Ambiente">${escapeHtml(r.rooms || "Ambiente —")}</span>
+             <span class="chip muted" title="Origem">${escapeHtml(r.source || "Origem —")}</span>`}
+      </div>
+
+      <div class="meta">${metaLines || "—"}</div>
+      <div class="scheduleState ${schedule.kind}">${escapeHtml(schedule.label)}${appointmentCount > 1 ? ` • +${appointmentCount - 1} futuro(s)` : ""}</div>
+
+      <div class="menu" data-menu="${escapeHtml(r.id)}">
+        <button type="button" data-act="edit" data-id="${escapeHtml(r.id)}">Editar</button>
+        <button type="button" data-act="schedule" data-id="${escapeHtml(r.id)}">Agendar no calendário</button>
+        <button type="button" data-act="logContact" data-id="${escapeHtml(r.id)}">Registrar contato agora</button>
+        ${!isSpecifier(r) && r.pipeline==="lead" && st!=="Lost" ? `<button type="button" data-act="toClosed" data-id="${escapeHtml(r.id)}">Won</button>` : ``}
+        ${!isSpecifier(r) && r.pipeline==="lead" && st!=="Lost" ? `<button type="button" data-act="markLost" data-id="${escapeHtml(r.id)}">Lost</button>` : ``}
+        <button type="button" class="dangerItem" data-act="del" data-id="${escapeHtml(r.id)}">Excluir</button>
+      </div>
+    </div>
+  `;
+}
+
+function pendingAttachmentsFor(pendingId){
+  return pendingAttachments.filter(attachment=>attachment.pending_id===pendingId);
+}
+
+function pendingDataset(){
+  let data = pendingItems.filter(item=>showCompletedPending || item.status!=="completed");
+  if(filters.owner!=="Todos") data = data.filter(item=>(item.owner_id||"")===filters.owner);
+  if(filters.source!=="Todos") data = data.filter(item=>item.pending_type===filters.source);
+  const city = filters.city.trim().toLowerCase();
+  const query = filters.search.trim().toLowerCase();
+  if(city) data = data.filter(item=>(item.city||"").toLowerCase().includes(city));
+  if(query){
+    data = data.filter(item=>[
+      item.title,item.description,item.customer_name,item.customer_phone,item.address,item.pending_type
+    ].filter(Boolean).join(" ").toLowerCase().includes(query));
+  }
+  return data.sort((a,b)=>{
+    if(a.status!==b.status) return a.status==="open" ? -1 : 1;
+    if(a.due_at && b.due_at) return new Date(a.due_at)-new Date(b.due_at);
+    if(a.due_at) return -1;
+    if(b.due_at) return 1;
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+}
+
+function renderPendingKPIs(){
+  const openItems = pendingItems.filter(item=>item.status!=="completed");
+  const now = new Date();
+  const overdue = openItems.filter(item=>item.due_at && new Date(item.due_at)<now).length;
+  const soon = openItems.filter(item=>{
+    if(!item.due_at) return false;
+    const days=(new Date(item.due_at)-now)/86400000;
+    return days>=0 && days<=7;
+  }).length;
+  $("kpiTotal").textContent = openItems.length;
+  $("kpiStuck").textContent = overdue;
+  $("kpiDue").textContent = soon;
+  $("kpiTotalLabel").textContent = "Pendências abertas";
+  $("kpiStuckLabel").textContent = "Atrasadas";
+  $("kpiDueLabel").textContent = "Prazo ≤ 7d";
+}
+
+function pendingDueState(item){
+  if(!item.due_at) return {label:"Sem prazo definido",className:""};
+  const date = new Date(item.due_at);
+  const diff=(date-Date.now())/86400000;
+  if(item.status==="completed") return {label:`Concluída • ${fmtBRDateTime(item.completed_at)}`,className:""};
+  if(diff<0) return {label:`Atrasada • ${fmtBRDateTime(item.due_at)}`,className:"pendingDueLate"};
+  if(diff<=7) return {label:`Prazo próximo • ${fmtBRDateTime(item.due_at)}`,className:"pendingDueSoon"};
+  return {label:`Prazo • ${fmtBRDateTime(item.due_at)}`,className:""};
+}
+
+function renderPendingCard(item){
+  const due = pendingDueState(item);
+  const photos = pendingAttachmentsFor(item.id).filter(photo=>photo.signed_url).slice(0,3);
+  return `<article class="pendingCard" data-pending-id="${escapeHtml(item.id)}" tabindex="0">
+    <div class="pendingCardTop">
+      <div class="pendingTitle">${escapeHtml(item.title)}</div>
+      <span class="priority ${escapeHtml(item.priority)}">${escapeHtml(item.priority)}</span>
+    </div>
+    <div class="pendingMeta">
+      ${item.customer_name ? `<b>${escapeHtml(item.customer_name)}</b><br>` : ""}
+      ${escapeHtml(profileNameById(item.owner_id))} • <span class="${due.className}">${escapeHtml(due.label)}</span>
+    </div>
+    ${photos.length ? `<div class="pendingThumbs">${photos.map(photo=>`<img src="${escapeHtml(photo.signed_url)}" alt="Foto da pendência">`).join("")}</div>` : ""}
+  </article>`;
+}
+
+function renderPending(){
+  renderPendingKPIs();
+  if(!pendingSupported){
+    return `<div class="empty">A estrutura de Pendências ainda precisa ser aplicada no Supabase.</div>`;
+  }
+  const data = pendingDataset();
+  const groups = PENDING_TYPES.map(type=>({type,label:type,items:data.filter(item=>item.status!=="completed" && item.pending_type===type)}));
+  if(showCompletedPending){
+    groups.push({type:"completed",label:"Concluídas",items:data.filter(item=>item.status==="completed")});
+  }
+  const totalCompleted = pendingItems.filter(item=>item.status==="completed").length;
+  return `<div style="display:flex;flex-direction:column;gap:10px;width:100%;min-width:0">
+    <div class="pendingToolbar">
+      <div class="formNotice">A pendência permanece ativa até alguém registrar a conclusão.</div>
+      <button class="ghost" type="button" data-pending-action="toggle-completed">${showCompletedPending ? "Ocultar concluídas" : `Mostrar concluídas (${totalCompleted})`}</button>
+    </div>
+    <div class="pendingLayout">
+      ${groups.map(group=>`<section class="pendingGroup ${group.items.length ? "" : "emptyPending"}">
+        <div class="pendingGroupHd"><h3>${escapeHtml(group.label)}</h3><span class="count">${group.items.length}</span></div>
+        <div class="pendingList">${group.items.length ? group.items.map(renderPendingCard).join("") : `<div class="empty">Sem itens</div>`}</div>
+      </section>`).join("")}
+    </div>
+  </div>`;
+}
+
+function releasePendingPreviews(){
+  pendingPhotosBuffer.forEach(item=>item.preview_url && URL.revokeObjectURL(item.preview_url));
+  pendingPhotosBuffer=[];
+}
+
+function renderPendingPhotoGrid(pendingId=""){
+  const existing = pendingAttachmentsFor(pendingId);
+  const savedHtml = existing.map(photo=>`<div class="photoTile">
+    ${photo.signed_url ? `<img src="${escapeHtml(photo.signed_url)}" alt="${escapeHtml(photo.file_name)}">` : ""}
+    <div class="photoName">${escapeHtml(photo.file_name)}</div>
+    <button type="button" data-remove-attachment="${escapeHtml(photo.id)}" aria-label="Remover foto">×</button>
+  </div>`).join("");
+  const newHtml = pendingPhotosBuffer.map((item,index)=>`<div class="photoTile">
+    <img src="${escapeHtml(item.preview_url)}" alt="Nova foto">
+    <div class="photoName">${escapeHtml(item.file.name)}</div>
+    <button type="button" data-remove-new-photo="${index}" aria-label="Remover nova foto">×</button>
+  </div>`).join("");
+  $("pendingPhotoGrid").innerHTML=savedHtml+newHtml;
+}
+
+function openPendingModal(item=null){
+  releasePendingPreviews();
+  $("pendingId").value=item?.id||"";
+  $("pendingModalTitle").textContent=item ? "Detalhes da pendência" : "Nova pendência";
+  $("pendingTitle").value=item?.title||"";
+  $("pendingType").value=PENDING_TYPES.includes(item?.pending_type) ? item.pending_type : PENDING_TYPES[0];
+  $("pendingPriority").value=item?.priority||"Normal";
+  $("pendingCustomer").value=item?.customer_name||"";
+  $("pendingPhone").value=item?.customer_phone||"";
+  $("pendingCity").value=item?.city||"";
+  $("pendingAddress").value=item?.address||"";
+  $("pendingDescription").value=item?.description||"";
+  $("pendingOwner").innerHTML=profiles.map(profile=>`<option value="${escapeHtml(profile.id)}">${escapeHtml(profile.display_name)}</option>`).join("");
+  $("pendingOwner").value=item?.owner_id||session?.user?.id||profiles[0]?.id||"";
+  const due=item?.due_at ? new Date(item.due_at) : null;
+  $("pendingDueDate").value=due ? inputDateValue(due) : "";
+  $("pendingDueTime").value=due ? inputTimeValue(due) : "09:00";
+  $("pendingPhotos").value="";
+  $("btnCompletePending").style.display=item && item.status!=="completed" ? "" : "none";
+  $("btnDeletePending").style.display=item ? "" : "none";
+  $("pendingStatusNote").textContent=item?.status==="completed"
+    ? `Concluída em ${fmtBRDateTime(item.completed_at)}.`
+    : "A pendência ficará visível até ser concluída.";
+  renderPendingPhotoGrid(item?.id||"");
+  $("pendingModal").showModal();
+}
+
+function closePendingModal(){
+  releasePendingPreviews();
+  $("pendingModal").close();
+}
+
+function safeFileName(name){
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-100);
+}
+
+async function uploadPendingPhotos(pendingId){
+  for(const item of pendingPhotosBuffer){
+    const file=item.file;
+    const objectPath=`${pendingId}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+    const {error:uploadError}=await sb.storage.from(PENDING_PHOTO_BUCKET).upload(objectPath,file,{contentType:file.type,upsert:false});
+    if(uploadError) throw uploadError;
+    const {error:insertError}=await sb.from(TBL_PENDING_ATTACHMENTS).insert({
+      pending_id:pendingId,object_path:objectPath,file_name:file.name,mime_type:file.type,size_bytes:file.size,created_by:session.user.id
+    });
+    if(insertError){
+      await sb.storage.from(PENDING_PHOTO_BUCKET).remove([objectPath]);
+      throw insertError;
+    }
+  }
+}
+
+async function savePendingItem(){
+  if(!session?.user) return toast("Sem login.");
+  const title=$("pendingTitle").value.trim();
+  if(!title) return toast("Informe o título da pendência.");
+  const id=$("pendingId").value;
+  const dueDate=$("pendingDueDate").value||null;
+  const payload={
+    title,pending_type:$("pendingType").value,priority:$("pendingPriority").value,
+    customer_name:$("pendingCustomer").value.trim()||null,customer_phone:$("pendingPhone").value.trim()||null,
+    city:$("pendingCity").value.trim()||null,address:$("pendingAddress").value.trim()||null,
+    description:$("pendingDescription").value.trim()||null,owner_id:$("pendingOwner").value||null,
+    due_at:localScheduleIso(dueDate,$("pendingDueTime").value||"09:00")
+  };
+  let saved;
+  if(id){
+    const {data,error}=await sb.from(TBL_PENDING).update(payload).eq("id",id).select("*").single();
+    if(error){console.error(error);return toast("Erro ao salvar pendência.");}
+    saved=data;
+  }else{
+    const {data,error}=await sb.from(TBL_PENDING).insert({...payload,status:"open",created_by:session.user.id}).select("*").single();
+    if(error){console.error(error);return toast("Erro ao criar pendência.");}
+    saved=data;
+  }
+  try{ await uploadPendingPhotos(saved.id); }
+  catch(error){ console.error(error); toast("Pendência salva, mas uma foto não foi enviada."); }
+  await fetchPendingData();
+  closePendingModal();
+  render();
+  toast("Pendência salva.");
+}
+
+async function completePendingItem(){
+  const id=$("pendingId").value;
+  if(!id) return;
+  const {error}=await sb.from(TBL_PENDING).update({status:"completed",completed_by:session.user.id,completed_at:nowISO()}).eq("id",id);
+  if(error) return toast("Erro ao concluir pendência.");
+  await fetchPendingData();
+  closePendingModal();
+  render();
+  toast("Pendência concluída.");
+}
+
+async function deletePendingItem(){
+  const id=$("pendingId").value;
+  if(!id || !confirm("Excluir esta pendência e suas fotos?")) return;
+  const paths=pendingAttachmentsFor(id).map(photo=>photo.object_path);
+  if(paths.length) await sb.storage.from(PENDING_PHOTO_BUCKET).remove(paths);
+  const {error}=await sb.from(TBL_PENDING).delete().eq("id",id);
+  if(error) return toast("Erro ao excluir pendência.");
+  await fetchPendingData();
+  closePendingModal();
+  render();
+  toast("Pendência excluída.");
+}
+
+function renderReports(){
+  const now = new Date();
+  const since = new Date(now.getTime() - 7*24*60*60*1000);
+  const leads = records.filter(r=>!isSpecifier(r));
+  const activeLeads = leads.filter(r=>r.pipeline==="lead" && normalizeLeadStage(r.stage)!=="Lost");
+  const specifiers = records.filter(r=>isSpecifier(r) && r.stage!=="Pausado");
+  const weeklyEvents = recordEvents.filter(e=>new Date(e.occurred_at) >= since);
+  const createdThisWeek = leads.filter(r=>new Date(r.created_at) >= since).length;
+  const stageMoves = weeklyEvents.filter(e=>e.event_type==="stage_changed").length;
+  const contacts = weeklyEvents.filter(e=>e.event_type==="contact_logged").length;
+  const scheduled = activeLeads.filter(r=>{
+    const d=getNextActionAt(r); return d && d>=now;
+  });
+  const overdue = activeLeads.filter(r=>{
+    const d=getNextActionAt(r); return d && d<now;
+  });
+  const withoutSchedule = activeLeads.filter(r=>!getNextActionAt(r));
+  const followupCoverage = activeLeads.length ? Math.round((scheduled.length/activeLeads.length)*100) : null;
+  const specifierCoverage = specifiers.length
+    ? Math.round((specifiers.filter(r=>{const d=getNextActionAt(r); return d && d>=now;}).length/specifiers.length)*100)
+    : null;
+
+  const qualityDist = Object.fromEntries(LEAD_QUALITIES.map(q=>[q,0]));
+  leads.filter(r=>r.pipeline==="lead").forEach(r=>{
+    const q = LEAD_QUALITIES.includes(r.lead_quality) ? r.lead_quality : "Unreviewed";
+    qualityDist[q] = (qualityDist[q]||0)+1;
+  });
+  const assessed = Math.max(0, leads.filter(r=>r.pipeline==="lead").length - (qualityDist["Unreviewed"]||0));
+  const qualifiedFit = (qualityDist["Hot"]||0) + (qualityDist["Warm"]||0);
+  const latestWeekly = weeklyReports[0] || null;
+  const savedSummary = latestWeekly?.summary || null;
+  const shown = {
+    newLeads: savedSummary?.new_leads ?? createdThisWeek,
+    stageMoves: savedSummary?.stage_moves ?? stageMoves,
+    contacts: savedSummary?.contacts ?? contacts,
+    coverage: savedSummary?.followup_coverage_pct ?? followupCoverage,
+    fitPct: savedSummary?.fit_pct ?? (assessed ? Math.round((qualifiedFit/assessed)*100) : null),
+    unassessed: savedSummary?.unassessed_leads ?? (qualityDist["Unreviewed"]||0),
+    overdue: savedSummary?.overdue_followups ?? overdue.length
+  };
+  const reportPeriod = latestWeekly
+    ? `Resumo programado de ${fmtBRDate(`${latestWeekly.week_start}T12:00:00`)} a ${fmtBRDate(`${latestWeekly.week_end}T12:00:00`)} • gerado ${fmtBRDateTime(latestWeekly.generated_at)}`
+    : "Visão ao vivo dos últimos 7 dias • o primeiro resumo fixo será gerado na próxima segunda-feira às 09:00";
+
+  renderKPIs(activeLeads);
+
+  const qualityRows = LEAD_QUALITIES.map(q=>{
+    const value = qualityDist[q] || 0;
+    const total = Math.max(1, leads.filter(r=>r.pipeline==="lead").length);
+    const pct = Math.round((value/total)*100);
+    return `<div class="reportRow"><div style="display:flex;justify-content:space-between;gap:10px"><span>${escapeHtml(q)}</span><b>${value} • ${pct}%</b></div><div class="reportBar"><span style="width:${pct}%"></span></div></div>`;
+  }).join("");
+
+  const attention = [...overdue.map(r=>({r, reason:"Acompanhamento atrasado"})), ...withoutSchedule.map(r=>({r, reason:"Sem acompanhamento agendado"}))]
+    .slice(0,40);
+  const attentionRows = attention.length ? attention.map(({r,reason})=>`
+    <div class="reportRow">
+      <b>${escapeHtml(fullName(r))}</b> • ${escapeHtml(profileNameById(r.owner_id))}<br/>
+      <span style="color:var(--muted)">${escapeHtml(reason)} • ${escapeHtml(r.stage||"—")}</span>
+    </div>`).join("") : `<div class="empty">Todos os leads ativos têm acompanhamento futuro.</div>`;
+
+  const eventLabels = {
+    created:"Novo cadastro",
+    stage_changed:"Mudança de etapa",
+    followup_scheduled:"Acompanhamento agendado",
+    contact_logged:"Contato registrado",
+    quality_changed:"Qualidade avaliada"
+  };
+  const movementRows = weeklyEvents.slice(0,60).map(e=>{
+    const r = records.find(x=>x.id===e.record_id);
+    return `<div class="reportRow"><b>${escapeHtml(eventLabels[e.event_type]||e.event_type)}</b> • ${escapeHtml(r ? fullName(r) : "Registro removido")}<br/><span style="color:var(--muted)">${escapeHtml(fmtBRDateTime(e.occurred_at))}${e.to_value ? ` • ${escapeHtml(e.to_value)}` : ""}</span></div>`;
+  }).join("") || `<div class="empty">O histórico começará a aparecer após a nova migração.</div>`;
+
+  return `
+    <div style="display:flex; flex-direction:column; gap:10px; width:100%; min-width:0;">
+      <div class="formNotice">${escapeHtml(reportPeriod)}</div>
+      <div class="summaryGrid">
+        <div class="summaryCard"><div class="t">Novos leads • semana</div><div class="n">${shown.newLeads}</div><div class="d">Entradas recentes no funil.</div></div>
+        <div class="summaryCard"><div class="t">Movimentações • semana</div><div class="n">${shown.stageMoves}</div><div class="d">Mudanças de etapa registradas.</div></div>
+        <div class="summaryCard"><div class="t">Contatos • semana</div><div class="n">${shown.contacts}</div><div class="d">Atendimentos marcados como realizados.</div></div>
+        <div class="summaryCard"><div class="t">Leads com agenda futura</div><div class="n">${shown.coverage===null ? "—" : `${shown.coverage}%`}</div><div class="d">Meta recomendada: 100% dos leads ativos.</div></div>
+        <div class="summaryCard"><div class="t">Hot or warm leads</div><div class="n">${shown.fitPct===null ? "—" : `${shown.fitPct}%`}</div><div class="d">Based only on reviewed leads.</div></div>
+        <div class="summaryCard"><div class="t">Sem avaliação de perfil</div><div class="n">${shown.unassessed}</div><div class="d">Precisam de qualificação comercial.</div></div>
+        <div class="summaryCard"><div class="t">Acompanhamentos atrasados</div><div class="n">${shown.overdue}</div><div class="d">Exigem contato ou reagendamento.</div></div>
+        <div class="summaryCard"><div class="t">Especificadores com agenda</div><div class="n">${specifierCoverage===null ? "—" : `${specifierCoverage}%`}</div><div class="d">Relacionamentos com próximo passo futuro.</div></div>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start;">
+        <section class="sectionCard"><div class="sectionHd"><span>Qualidade dos leads</span><span>${assessed} avaliados</span></div><div class="sectionBody">${qualityRows}</div></section>
+        <section class="sectionCard"><div class="sectionHd"><span>Prioridade de acompanhamento</span><span>${attention.length}</span></div><div class="sectionBody">${attentionRows}</div></section>
+        <section class="sectionCard"><div class="sectionHd"><span>Movimentação recente</span><span>Últimos 7 dias</span></div><div class="sectionBody">${movementRows}</div></section>
+      </div>
+    </div>`;
+}
+
+function renderConfig(){
+  const userLines = profiles.length ? profiles.map(p=>`
+    <div style="display:flex; justify-content:space-between; gap:10px; padding:10px; border-bottom:1px dashed rgba(47,61,110,.60); align-items:center">
+      <span><b>${escapeHtml(p.display_name)}</b></span>
+      <span class="badge">${escapeHtml(p.id.slice(0,8))}</span>
+    </div>
+  `).join("") : `<div class="empty">Usuários aparecerão após cada login (perfil).</div>`;
+
+  const srcLines = config.sources.map((s,i)=>`
+    <div style="display:flex; justify-content:space-between; gap:10px; padding:10px; border-bottom:1px dashed rgba(47,61,110,.60); align-items:center">
+      <span>${escapeHtml(s)}</span>
+      <button class="danger" style="padding:8px 10px; font-size:12px" data-act="rmSource" data-idx="${i}">Remover</button>
+    </div>
+  `).join("");
+
+  const reasonLines = config.lost_reasons.map((s,i)=>`
+    <div style="display:flex; justify-content:space-between; gap:10px; padding:10px; border-bottom:1px dashed rgba(47,61,110,.60); align-items:center">
+      <span>${escapeHtml(s)}</span>
+      <button class="danger" style="padding:8px 10px; font-size:12px" data-act="rmReason" data-idx="${i}">Remover</button>
+    </div>
+  `).join("");
+
+  $("kpiTotal").textContent = "—"; $("kpiStuck").textContent="—"; $("kpiDue").textContent="—";
+  $("kpiTotalLabel").textContent = "No filtro";
+  $("kpiStuckLabel").textContent = "Parados ≥ 14d";
+  $("kpiDueLabel").textContent = "Próx. ação ≤ 7d";
+
+  const outlookLabel = !outlookStatus.configured
+    ? "Integração ainda não configurada no servidor"
+    : outlookStatus.connected
+      ? `Conectado a ${outlookStatus.account_email || "conta central"}${outlookStatus.provider === "make" ? " • automação gratuita" : ""}`
+      : "Aguardando conexão única com a conta da loja";
+  const outlookAction = outlookStatus.provider === "make"
+    ? ``
+    : outlookStatus.connected
+    ? `<button class="danger" data-act="disconnectOutlook">Desconectar</button>`
+    : `<button class="primary" data-act="connectOutlook" ${outlookStatus.configured ? "" : "disabled"}>Connect Marel calendar</button>`;
+  const outlookNote = outlookStatus.provider === "make"
+    ? "A Make recebe somente os dados necessários do compromisso e grava no calendário central. Os usuários continuam trabalhando apenas no CRM."
+    : "Depois da conexão inicial, todos os usuários criam e atualizam compromissos sem sair do CRM.";
+
+  return `
+    <section class="outlookStatusCard">
+      <div class="sectionHd" style="padding:0 0 10px;border-bottom:1px solid var(--line)"><span>Calendário central</span></div>
+      <div class="outlookStatusLine"><span class="statusDot ${outlookStatus.connected ? "connected" : ""}"></span><span>${escapeHtml(outlookLabel)}</span></div>
+      <div class="note" style="margin-bottom:12px">${escapeHtml(outlookNote)}</div>
+      ${outlookAction}
+    </section>
+
+    <div class="col" style="min-width:360px; max-width:420px;">
+      <div class="colHd">
+        <div class="colTitle"><div>Usuários</div><small>Lista vinda dos perfis (Auth)</small></div>
+        <div class="count">${profiles.length}</div>
+      </div>
+      <div class="dropZone" style="padding:0">
+        <div class="empty" style="text-align:left; margin:10px;">
+          Para adicionar usuário: crie no Supabase (Auth). No primeiro login, ele cria o perfil automaticamente.
+        </div>
+        ${userLines}
+      </div>
+    </div>
+
+    <div class="col" style="min-width:360px; max-width:420px;">
+      <div class="colHd">
+        <div class="colTitle"><div>Origens</div><small>Compartilhado</small></div>
+        <div class="count">${config.sources.length}</div>
+      </div>
+      <div class="dropZone" style="padding:0">
+        <div style="display:flex; gap:8px; padding:10px;">
+          <input id="newSource" placeholder="Nova origem" />
+          <button class="primary" data-act="addSource">Adicionar</button>
+        </div>
+        ${srcLines || `<div class="empty">Sem origens.</div>`}
+      </div>
+    </div>
+
+    <div class="col" style="min-width:360px; max-width:420px;">
+      <div class="colHd">
+        <div class="colTitle"><div>Motivos de perda</div><small>Quando Perdido</small></div>
+        <div class="count">${config.lost_reasons.length}</div>
+      </div>
+      <div class="dropZone" style="padding:0">
+        <div style="display:flex; gap:8px; padding:10px;">
+          <input id="newReason" placeholder="Novo motivo" />
+          <button class="primary" data-act="addReason">Adicionar</button>
+        </div>
+        ${reasonLines || `<div class="empty">Sem motivos.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function buildFilters(){
+  // owner filter uses profile id, plus Todos
+  const ownerSel = $("fOwner");
+  ownerSel.innerHTML = `<option value="Todos">Todos</option>` + profiles.map(p=>`<option value="${escapeHtml(p.id)}">${escapeHtml(p.display_name)}</option>`).join("");
+  ownerSel.value = filters.owner;
+
+  const srcSel = $("fSource");
+  const sourceOptions = currentTab === "specifiers" ? SPECIFIER_TYPES : (currentTab === "pending" ? PENDING_TYPES : config.sources);
+  $("fSourceLabel").textContent = ["specifiers","pending"].includes(currentTab) ? "Tipo" : "Origem";
+  srcSel.innerHTML = `<option>Todos</option>` + sourceOptions.map(s=>`<option>${escapeHtml(s)}</option>`).join("");
+  if(!sourceOptions.includes(filters.source)) filters.source = "Todos";
+  srcSel.value = filters.source;
+
+  $("fCity").value = filters.city;
+  $("fSearch").value = filters.search;
+
+  // modal selects
+  fillSelect($("source"), config.sources, config.sources[0]);
+  fillSelect($("lostReason"), config.lost_reasons, config.lost_reasons[0]);
+  fillSelect($("owner"), profiles.map(p=>p.id), session?.user?.id);
+  // render owner dropdown as labels: swap values to id but show label via data map
+  $("owner").innerHTML = profiles.map(p=>`<option value="${escapeHtml(p.id)}">${escapeHtml(p.display_name)}</option>`).join("");
+}
+
+function updateLostBtn(){
+  const btn = document.getElementById("btnToggleLost");
+  if(!btn) return;
+  btn.textContent = hideLostColumn ? "Mostrar Perdido" : "Ocultar Perdido";
+  btn.disabled = currentTab !== "leads";
+  $("wrapLostFilter").style.display = currentTab === "leads" ? "" : "none";
+}
+
+
+function render(){
+  updateAppStateBanner();
+  $("board").setAttribute("aria-busy", appDataState === "loading" ? "true" : "false");
+  if(appDataState !== "ready"){
+    renderKPIs([]);
+    $("board").innerHTML = statePanelHtml();
+    return;
+  }
+  if(currentTab==="config"){
+    $("board").innerHTML = renderConfig();
+    return;
+  }
+  if(currentTab==="reports"){
+    $("board").innerHTML = renderReports();
+    return;
+  }
+  if(currentTab==="pending"){
+    $("board").innerHTML = renderPending();
+    wirePendingCards();
+    return;
+  }
+
+  const data = datasetForTab();
+  renderKPIs(data);
+
+  const stages = getStagesForTab();
+  const byStage = {};
+  stages.forEach(s=>byStage[s]=[]);
+  data.forEach(r=>{
+    let st = r.stage || (isSpecifier(r) ? SPECIFIER_STAGES[0] : (r.pipeline==="lead" ? LEAD_STAGES[0] : CLOSED_STAGES[0]));
+    if(r.pipeline==="lead" && !isSpecifier(r)) st = normalizeLeadStage(st);
+    if(r.pipeline==="closed" && !isSpecifier(r)) st = normalizeClosedStage(st);
+    (byStage[st] ||= []).push(r);
+  });
+
+  $("board").innerHTML = stages.map(stage=>{
+    const list = byStage[stage] || [];
+    return `
+      <div class="col ${list.length ? "" : "emptyStage"}" data-stage="${escapeHtml(stage)}">
+        <div class="colHd">
+          <div class="colTitle">
+            <div>${escapeHtml(stage)}</div>
+            <small>${escapeHtml(currentTab === "leads" ? (STAGE_PHASES[stage] || "") : "")}&nbsp;</small>
+          </div>
+          <div class="count">${list.length}</div>
+        </div>
+        <div class="dropZone" data-drop-stage="${escapeHtml(stage)}">
+          ${list.length ? list.map(r=>renderCard(r)).join("") : `<div class="empty">Sem itens</div>`}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  if(!isMobileLayout()) wireDnD();
+  wireCardOpen();
+}
+
+function wirePendingCards(){
+  document.querySelectorAll(".pendingCard[data-pending-id]").forEach(card=>{
+    const open=()=>{
+      const item=pendingItems.find(entry=>entry.id===card.dataset.pendingId);
+      if(item) openPendingModal(item);
+    };
+    card.addEventListener("click",open);
+    card.addEventListener("keydown",event=>{
+      if(event.key==="Enter" || event.key===" "){event.preventDefault();open();}
+    });
+  });
+  const toggle=$("board").querySelector("[data-pending-action='toggle-completed']");
+  toggle?.addEventListener("click",()=>{showCompletedPending=!showCompletedPending;render();});
+}
+
+/* ===== DnD ===== */
+async function moveRecordToStage(id, stage){
+  const r = records.find(x=>x.id===id);
+  if(!r) return;
+
+  if(!sb || !session?.user) return toast("Sem login.");
+
+  const old = r.stage;
+  if(old === stage) return;
+  const patch = { stage, stage_entered_at: nowISO() };
+  // optimistic
+  r.stage = stage; r.stage_entered_at = patch.stage_entered_at;
+
+  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", id);
+  if(error){
+    toast("Erro ao mover etapa.");
+    await fetchRecords();
+  }else{
+    toast(old!==stage ? `Movido: ${stage}` : "Atualizado.");
+  }
+  render();
+}
+
+function clearDragover(){
+  document.querySelectorAll(".dropZone.dragover").forEach(z=>z.classList.remove("dragover"));
+  document.querySelectorAll(".card.menuOpen").forEach(c=>c.classList.remove("menuOpen"));
+}
+
+function wireDnD(){
+  const boardEl = document.getElementById("board");
+
+  document.querySelectorAll(".card[draggable='true']").forEach(c=>{
+    c.addEventListener("dragstart", (e)=>{
+      if(e.target && e.target.closest && e.target.closest(".dots")){ e.preventDefault(); return; }
+      isDragging = true;
+      e.dataTransfer.setData("text/plain", c.dataset.id);
+      e.dataTransfer.effectAllowed = "move";
+      c.style.opacity = "0.7";
+    });
+    c.addEventListener("dragend", ()=>{
+      isDragging = false;
+      justDraggedAt = Date.now();
+      c.style.opacity="1";
+      clearDragover();
+    });
+  });
+
+  // Permitir drop em qualquer altura (inclusive sobre cards)
+  let lastZone = null;
+
+  boardEl.addEventListener("dragover", (e)=>{
+    const col = e.target.closest?.(".col[data-stage]");
+    if(!col) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    const zone = col.querySelector(".dropZone");
+    if(zone && zone !== lastZone){
+      clearDragover();
+      zone.classList.add("dragover");
+      lastZone = zone;
+    }
+  }, true);
+
+  boardEl.addEventListener("dragleave", (e)=>{
+    // quando sai do board, limpa
+    if(e.relatedTarget && boardEl.contains(e.relatedTarget)) return;
+    clearDragover();
+    lastZone = null;
+  }, true);
+
+  boardEl.addEventListener("drop", async (e)=>{
+    const col = e.target.closest?.(".col[data-stage]");
+    if(!col) return;
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    const stage = col.dataset.stage;
+    clearDragover();
+    lastZone = null;
+    if(id && stage) await moveRecordToStage(id, stage);
+  }, true);
+}
+
+
+function wireCardOpen(){
+  document.querySelectorAll(".card[data-id]").forEach(card=>{
+    if(card._wiredOpen) return;
+    card._wiredOpen = true;
+
+    let sx=0, sy=0, moved=false;
+
+    card.addEventListener("pointerdown", (e)=>{
+      if(e.target?.closest?.(".dots")) return;
+      // only primary button
+      if(e.button !== undefined && e.button !== 0) return;
+      sx = e.clientX; sy = e.clientY; moved = false;
+    });
+
+    card.addEventListener("pointermove", (e)=>{
+      if(isDragging) return;
+      if(moved) return;
+      const dx = Math.abs(e.clientX - sx);
+      const dy = Math.abs(e.clientY - sy);
+      if(dx > 6 || dy > 6) moved = true;
+    });
+
+    card.addEventListener("pointerup", (e)=>{
+      if(e.target?.closest?.(".dots")) return;
+      if(isDragging) return;
+      if(Date.now() - justDraggedAt < 250) return;
+      if(moved) return;
+      const id = card.dataset.id;
+      const r = records.find(x=>x.id===id);
+      if(r) openModal(r);
+    });
+  });
+}
+
+
+/* ===== Menus + card click opens modal ===== */
+function closeAllMenus(){
+  document.querySelectorAll(".menu.open").forEach(m=>m.classList.remove("open"));
+  document.querySelectorAll(".card.menuOpen").forEach(c=>c.classList.remove("menuOpen"));
+}
+document.addEventListener("click", async (e)=>{
+  const btn = e.target.closest?.("[data-menu-btn]");
+  if(btn){
+    e.stopPropagation();
+    const id = btn.dataset.menuBtn;
+    const menu = document.querySelector(`.menu[data-menu="${CSS.escape(id)}"]`);
+    const hostCard = btn.closest(".card");
+    if(!menu) return;
+    const isOpen = menu.classList.contains("open");
+    closeAllMenus();
+    if(!isOpen){
+      menu.classList.add("open");
+      hostCard?.classList.add("menuOpen");
+    }
+    return;
+  }
+
+  const actBtn = e.target.closest?.("button[data-act]");
+  if(actBtn){
+    const act = actBtn.dataset.act;
+    const id = actBtn.dataset.id;
+    if(!act || !id) return;
+
+    const r = records.find(x=>x.id===id);
+    if(!r) return;
+
+    closeAllMenus();
+    if(act==="edit"){ openModal(r); return; }
+    if(act==="schedule"){ openModal(r, { focusSchedule:true }); return; }
+    if(act==="logContact"){ await registerContactNow(r); return; }
+    if(act==="toClosed"){ await markAsClosed(r); return; }
+    if(act==="markLost"){ await markAsLost(r); return; }
+    if(act==="del"){ await deleteRecord(r); return; }
+    return;
+  }
+
+  const insideMenu = e.target.closest?.(".menu");
+  if(!insideMenu) closeAllMenus();
+
+
+  // Config actions
+  const cfgBtn = e.target.closest?.("button[data-act-config]");
+  if(cfgBtn) return;
+});
+
+/* ===== Modal ===== */
+function updateLostReasonVisibility(){
+  const show = $("recordType").value !== "specifier" && $("pipeline").value==="lead" && $("stage").value==="Lost";
+  $("wrapLostReason").style.display = show ? "" : "none";
+}
+function clearAppointmentComposer(){
+  $("nextAction").value = "";
+  $("nextActionTime").value = "09:00";
+  $("nextActionKind").value = "Follow-up";
+  $("nextActionDuration").value = "30";
+  $("nextActionReminder").value = "30";
+  $("nextActionDetails").value = "";
+}
+function appointmentFromComposer(){
+  const date = $("nextAction").value;
+  if(!date) return null;
+  const startsAt = localScheduleIso(date, $("nextActionTime").value || "09:00");
+  if(!startsAt) return null;
+  return {
+    id:crypto.randomUUID(), starts_at:startsAt,
+    kind:$("nextActionKind").value || "Follow-up",
+    details:$("nextActionDetails").value.trim() || null,
+    duration_minutes:Number($("nextActionDuration").value || 30),
+    reminder_minutes:Number($("nextActionReminder").value || 30),
+    status:"scheduled", event_id:null, web_link:null, synced_at:null
+  };
+}
+function renderAppointmentList(){
+  const list = $("appointmentList");
+  if(!list) return;
+  const sorted = appointmentDrafts.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  list.innerHTML = sorted.length ? sorted.map(item=>{
+    const synced = Boolean(item.event_id || item.synced_at);
+    return `<div class="appointmentItem" data-appointment-id="${escapeHtml(item.id)}">
+      <div class="appointmentItemMain">
+        <b>${escapeHtml(item.kind)} • ${escapeHtml(fmtBRDateTime(item.starts_at))}</b>
+        ${item.details ? `<div>${escapeHtml(item.details)}</div>` : ""}
+        <div class="appointmentItemMeta">${item.duration_minutes || 30} min • lembrete ${item.reminder_minutes ? `${item.reminder_minutes} min antes` : "desativado"}${synced ? " • salvo no calendário" : " • aguardando salvar"}</div>
+      </div>
+      ${synced
+        ? (item.web_link ? `<a class="btn" href="${escapeHtml(item.web_link)}" target="_blank" rel="noopener noreferrer">Abrir</a>` : `<span class="appointmentItemMeta">No calendário</span>`)
+        : `<button class="ghost" type="button" data-remove-appointment="${escapeHtml(item.id)}">Remover</button>`}
+    </div>`;
+  }).join("") : `<div class="appointmentEmpty">Nenhum compromisso cadastrado. Preencha os campos acima e toque em “+ Adicionar compromisso”.</div>`;
+}
+function addAppointmentFromComposer({silent=false}={}){
+  const appointment = appointmentFromComposer();
+  if(!appointment){
+    if(!silent) toast("Escolha a data do compromisso.");
+    return false;
+  }
+  appointmentDrafts.push(appointment);
+  clearAppointmentComposer();
+  renderAppointmentList();
+  if(!silent) toast("Compromisso adicionado. Você pode incluir outro.");
+  return true;
+}
+function updateModalMode(kind){
+  const specifier = kind === "specifier";
+  document.querySelectorAll(".leadDiscoveryField").forEach(field=>field.style.display=specifier ? "none" : "");
+  $("wrapRooms").style.display = specifier ? "none" : "";
+  $("wrapSource").style.display = specifier ? "none" : "";
+  $("wrapPipeline").style.display = specifier ? "none" : "";
+  $("wrapEstimate").style.display = specifier ? "none" : "";
+  $("wrapLeadQuality").style.display = specifier ? "none" : "";
+  $("wrapSpecifierType").style.display = specifier ? "" : "none";
+  $("wrapCompanyName").style.display = specifier ? "" : "none";
+  $("rooms").required = !specifier;
+  $("btnQuickClosed").style.display = specifier ? "none" : "";
+  $("btnQuickLost").style.display = specifier ? "none" : "";
+  $("modalFootNote").textContent = specifier
+    ? "Mantenha sempre um próximo contato para fortalecer a parceria."
+    : "Atalhos: agendar, registrar contato, fechar, perder ou excluir.";
+  $("modalRequirement").textContent = specifier
+    ? "Obrigatório: Nome, Sobrenome, Telefone e Cidade."
+    : "Obrigatório: Nome, Sobrenome, Telefone, Cidade e Ambiente.";
+  $("outlookScheduleNotice").textContent = outlookStatus.connected
+    ? `Appointments are saved to the approved Marel calendar account${outlookStatus.account_email ? ` (${outlookStatus.account_email})` : ""}.`
+    : "O calendário central precisa ser conectado uma única vez na aba Config antes do primeiro agendamento.";
+  updateLostReasonVisibility();
+}
+function openModal(record=null, options={}){
+  const prevSearch = $("fSearch").value;
+  const prevCity = $("fCity").value;
+
+  const isNew = !record;
+  const kind = record ? recordType(record) : (currentTab === "specifiers" ? "specifier" : "lead");
+  currentEditingId = record?.id || null;
+  $("recordType").value = kind;
+  $("modalTitle").textContent = isNew
+    ? (kind === "specifier" ? "Novo especificador" : (currentTab==="closed" ? "Novo fechado" : "Novo lead"))
+    : (kind === "specifier" ? "Detalhes do especificador" : "Detalhes do cliente");
+
+  $("id").value = record?.id || "";
+  $("modalCustomerAvatar").hidden = true;
+  $("modalCustomerAvatar").removeAttribute("src");
+  $("firstName").value = record?.first_name || "";
+  $("lastName").value = record?.last_name || "";
+  $("phone").value = record?.phone || "";
+  $("city").value = record?.city || "";
+  $("rooms").value = record?.rooms || "";
+  $("email").value = record?.email || "";
+  $("estimate").value = (record?.estimate ?? "");
+  $("notes").value = record?.notes || "";
+  appointmentDrafts = normalizeAppointments(record);
+  clearAppointmentComposer();
+  renderAppointmentList();
+  $("leadQuality").value = LEAD_QUALITIES.includes(record?.lead_quality) ? record.lead_quality : "Unreviewed";
+  $("specifierType").value = SPECIFIER_TYPES.includes(record?.specifier_type) ? record.specifier_type : SPECIFIER_TYPES[0];
+  $("companyName").value = record?.company_name || "";
+  $("propertyStatus").value = record?.property_status || "Não informado";
+  $("professionalName").value = record?.professional_name || "";
+  $("hasFloorPlan").value = record?.has_floor_plan === true ? "true" : (record?.has_floor_plan === false ? "false" : "");
+  $("investmentProfile").value = record?.investment_profile || "A definir";
+  $("decisionDueAt").value = record?.decision_due_at || "";
+  $("preferredContact").value = [...$("preferredContact").options].some(option=>option.value===record?.preferred_contact)
+    ? record.preferred_contact
+    : "Email";
+
+  // selects
+  fillSelect($("source"), config.sources, record?.source || config.sources[0]);
+  $("owner").innerHTML = profiles.map(p=>`<option value="${escapeHtml(p.id)}">${escapeHtml(p.display_name)}</option>`).join("");
+  $("owner").value = record?.owner_id || session?.user?.id || (profiles[0]?.id || "");
+
+  const pipeline = kind === "specifier" ? "lead" : (record?.pipeline || (currentTab==="closed" ? "closed" : "lead"));
+  $("pipeline").value = pipeline;
+
+  const defaultStage = kind === "specifier" ? SPECIFIER_STAGES[0] : (pipeline==="lead" ? LEAD_STAGES[0] : CLOSED_STAGES[0]);
+  fillSelect($("stage"), stageOptionsForRecord(kind, pipeline), (kind === "specifier" ? record?.stage : (pipeline==="lead" ? normalizeLeadStage(record?.stage) : normalizeClosedStage(record?.stage))) || defaultStage);
+  fillSelect($("lostReason"), config.lost_reasons, record?.lost_reason || config.lost_reasons[0]);
+  updateModalMode(kind);
+
+  // Quick buttons
+  const st = $("stage").value;
+  const canQuick = (kind !== "specifier" && pipeline==="lead" && st !== "Lost");
+  $("btnQuickClosed").disabled = !canQuick;
+  $("btnQuickLost").disabled = !canQuick;
+  $("btnLogContact").disabled = isNew;
+  $("btnQuickDelete").disabled = isNew;
+
+  $("fSearch").value = prevSearch;
+  $("fCity").value = prevCity;
+
+  $("modal").showModal();
+  if(options.focusSchedule){
+    setTimeout(()=>$("nextAction").focus(), 50);
+  }
+}
+function closeModal(){ $("modal").close(); currentEditingId=null; }
+
+async function upsertFromForm(){
+  if(!sb || !session?.user) { toast("Sem login."); return false; }
+
+  const id = ($("id").value || "").trim();
+  const isNew = !id;
+  const kind = $("recordType").value === "specifier" ? "specifier" : "lead";
+
+  const pipeline = kind === "specifier" ? "lead" : $("pipeline").value;
+  const stage = $("stage").value;
+
+  const firstName = $("firstName").value.trim();
+  const lastName  = $("lastName").value.trim();
+  const phone     = $("phone").value.trim();
+  const city      = $("city").value.trim();
+  const rooms     = kind === "specifier"
+    ? ($("companyName").value.trim() || $("specifierType").value || "Parcerias")
+    : $("rooms").value.trim();
+
+  if(!firstName || !lastName || !phone || !city || (!rooms && kind !== "specifier")){
+    toast(kind === "specifier"
+      ? "Preencha: Nome, Sobrenome, Telefone e Cidade."
+      : "Preencha: Nome, Sobrenome, Telefone, Cidade e Ambiente.");
+    return false;
+  }
+
+  if($("nextAction").value) addAppointmentFromComposer({silent:true});
+  const appointments = appointmentDrafts.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  const activeAppointments = appointments.filter(item=>item.status === "scheduled" && item.starts_at);
+  const primaryAppointment = activeAppointments.find(item=>new Date(item.starts_at).getTime() >= Date.now()) || activeAppointments[0] || null;
+  const nextActionAt = primaryAppointment?.starts_at || null;
+  const nextActionDate = nextActionAt ? inputDateValue(new Date(nextActionAt)) : null;
+
+  const payload = {
+    record_type: kind,
+    first_name: firstName,
+    last_name: lastName,
+    phone,
+    city,
+    rooms,
+    email: $("email").value.trim() || null,
+    estimate: kind === "specifier" ? null : ($("estimate").value === "" ? null : Number($("estimate").value)),
+    notes: $("notes").value.trim() || null,
+    source: kind === "specifier" ? null : ($("source").value || null),
+    owner_id: $("owner").value || null,
+    pipeline,
+    stage,
+    appointments,
+    next_action: nextActionDate,
+    next_action_at: nextActionAt,
+    next_action_kind: primaryAppointment?.kind || null,
+    next_action_details: primaryAppointment?.details || null,
+    next_action_duration_minutes: Number(primaryAppointment?.duration_minutes || 30),
+    next_action_reminder_minutes: Number(primaryAppointment?.reminder_minutes ?? 30),
+    specifier_type: kind === "specifier" ? ($("specifierType").value || SPECIFIER_TYPES[0]) : null,
+    company_name: kind === "specifier" ? ($("companyName").value.trim() || null) : null,
+    lead_quality: kind === "specifier" ? "Unreviewed" : ($("leadQuality").value || "Unreviewed"),
+    property_status: kind === "specifier" ? "Não informado" : ($("propertyStatus").value || "Não informado"),
+    professional_name: kind === "specifier" ? null : ($("professionalName").value.trim() || null),
+    has_floor_plan: kind === "specifier" || $("hasFloorPlan").value === "" ? null : $("hasFloorPlan").value === "true",
+    investment_profile: kind === "specifier" ? "A definir" : ($("investmentProfile").value || "A definir"),
+    decision_due_at: kind === "specifier" ? null : ($("decisionDueAt").value || null),
+    preferred_contact: $("preferredContact").value || "Email",
+    lost_reason: (kind !== "specifier" && pipeline==="lead" && stage==="Lost") ? ($("lostReason").value || null) : null
+  };
+
+  // stage_entered_at: só muda se a etapa mudou OU se for novo
+  const now = nowISO();
+  if(isNew){
+    payload.stage_entered_at = now;
+  }else{
+    const existing = records.find(r=>r.id===id);
+    payload.stage_entered_at = (existing && existing.stage === stage)
+      ? existing.stage_entered_at
+      : now;
+  }
+
+  if(isNew){
+    // INSERT (não usar UPSERT com id vazio)
+    const { data, error } = await sb.from(TBL_RECORDS).insert(payload).select("*").single();
+    if(error){
+      console.error("INSERT error:", error);
+      toast("Erro ao salvar (insert).");
+      return false;
+    }
+    records.unshift(data);
+    $("id").value = data.id; // atualiza modal com id criado
+    return true;
+  }else{
+    // UPDATE
+    const { data, error } = await sb.from(TBL_RECORDS).update(payload).eq("id", id).select("*").single();
+    if(error){
+      console.error("UPDATE error:", error);
+      toast("Erro ao salvar (update).");
+      return false;
+    }
+    const idx = records.findIndex(r=>r.id===data.id);
+    if(idx>=0) records[idx]=data; else records.unshift(data);
+    return true;
+  }
+}
+
+
+async function markAsClosed(r){
+  const patch = { pipeline:"closed", stage:CLOSED_STAGES[0], stage_entered_at: nowISO() };
+  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
+  if(error){ toast("Erro ao mover para Fechados."); return; }
+  toast("Movido para Fechados.");
+  await fetchRecords();
+  setTab("closed");
+}
+
+async function markAsLost(r){
+  const patch = { pipeline:"lead", stage:"Lost", stage_entered_at: nowISO(), lost_reason: r.lost_reason || config.lost_reasons[0] };
+  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
+  if(error){ toast("Erro ao marcar Perdido."); return; }
+  toast("Marcado como Perdido.");
+  await fetchRecords();
+  render();
+}
+
+async function deleteRecord(r){
+  if(!confirm("Excluir este registro?")) return;
+  const { error } = await sb.from(TBL_RECORDS).delete().eq("id", r.id);
+  if(error){ toast("Erro ao excluir."); return; }
+  toast("Excluído.");
+  records = records.filter(x=>x.id!==r.id);
+  render();
+  closeModal();
+}
+
+async function registerContactNow(r){
+  if(!r || !sb || !session?.user) return toast("Sem login.");
+  const timestamp = nowISO();
+  const { data, error } = await sb
+    .from(TBL_RECORDS)
+    .update({ last_contact_at:timestamp })
+    .eq("id", r.id)
+    .select("*")
+    .single();
+  if(error){
+    console.error("[CRM Contato] Falha ao registrar contato.", error);
+    toast("Erro ao registrar contato.");
+    return false;
+  }
+  const idx = records.findIndex(x=>x.id===r.id);
+  if(idx>=0) records[idx]=data;
+  await fetchRecordEvents();
+  render();
+  toast("Contato registrado agora.");
+  return true;
+}
+
+/* ===== Config updates ===== */
+async function saveConfig(){
+  const { error } = await sb.from(TBL_CONFIG).upsert({ id:1, sources: config.sources, lost_reasons: config.lost_reasons });
+  if(error) toast("Erro ao salvar config.");
+}
+
+/* ===== Tabs + filters ===== */
+function setTab(tab){
+  const tabChanged = currentTab !== tab;
+  currentTab = tab;
+  $("btnNew").textContent = tab === "specifiers" ? "+ Novo especificador" : (tab === "pending" ? "+ Nova pendência" : "+ Novo lead");
+  $("btnNew").style.display = ["reports","config"].includes(tab) ? "none" : "";
+  document.querySelectorAll(".tab").forEach(el=>{
+    const on = el.dataset.tab===tab;
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-selected", on ? "true" : "false");
+  });
+
+  const mobileHint = isMobileLayout() ? "Toque em um cartão para abrir. Etapas vazias ficam ocultas no celular." : "";
+  const hint = tab==="leads" ? mobileHint :
+               tab==="closed" ? mobileHint :
+               tab==="specifiers" ? "Relacionamento contínuo com arquitetos, designers, corretores e parceiros." :
+               tab==="pending" ? "Assistências, vistorias, peças e compras acompanhadas até a conclusão." :
+               tab==="reports" ? "Resumo semanal: movimentação, qualidade e cobertura de acompanhamento." :
+               "Config: origens e motivos de perda (compartilhado).";
+
+  $("boardHint").innerHTML = `<div>${escapeHtml(hint)}</div><div></div>`;
+  buildFilters();
+  updateLostBtn();
+  render();
+  if(tabChanged && isMobileLayout()) requestAnimationFrame(()=>window.scrollTo({top:0,behavior:"auto"}));
+}
+
+/* ===== UI Events ===== */
+document.querySelectorAll(".tab").forEach(el=>{
+  el.addEventListener("click", ()=>setTab(el.dataset.tab));
+  el.addEventListener("keydown", event=>{
+    if(event.key === "Enter" || event.key === " "){
+      event.preventDefault();
+      setTab(el.dataset.tab);
+    }
+  });
+});
+
+$("fOwner").addEventListener("change", e=>{ filters.owner=e.target.value; render(); });
+$("fSource").addEventListener("change", e=>{ filters.source=e.target.value; render(); });
+
+$("fCity").addEventListener("input", e=>{
+  filters.city = e.target.value;
+  render();
+});
+
+$("fSearch").addEventListener("input", e=>{
+  const v = (e.target.value || "").trim();
+
+  if (v.includes("@") && v === (session?.user?.email || "")) {
+    e.target.value = "";
+    filters.search = "";
+    render();
+    return;
+  }
+
+  filters.search = v;
+  render();
+});
+
+$("fSearch").addEventListener("change", e=>{
+  const v = (e.target.value || "").trim();
+  if (v.includes("@") && v === (session?.user?.email || "")) {
+    e.target.value = "";
+    filters.search = "";
+    render();
+  }
+});
+
+$("btnToggleLost").addEventListener("click", ()=>{
+  hideLostColumn = !hideLostColumn;
+  localStorage.setItem("crm_hide_lost", hideLostColumn ? "1" : "0");
+  updateLostBtn();
+  render();
+});
+
+$("btnNew").addEventListener("click", ()=> currentTab==="pending" ? openPendingModal(null) : openModal(null));
+$("btnCloseModal").addEventListener("click", closeModal);
+$("btnCancel").addEventListener("click", closeModal);
+$("pipeline").addEventListener("change", ()=>{
+  const p=$("pipeline").value;
+  fillSelect($("stage"), stageOptionsForRecord($("recordType").value, p), (p==="lead" ? LEAD_STAGES[0] : CLOSED_STAGES[0]));
+  updateLostReasonVisibility();
+});
+$("stage").addEventListener("change", updateLostReasonVisibility);
+$("btnAddAppointment").addEventListener("click", ()=>addAppointmentFromComposer());
+$("appointmentList").addEventListener("click", event=>{
+  const button = event.target.closest("[data-remove-appointment]");
+  if(!button) return;
+  appointmentDrafts = appointmentDrafts.filter(item=>item.id!==button.dataset.removeAppointment);
+  renderAppointmentList();
+  toast("Compromisso removido da lista.");
+});
+$("btnSave").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  if(await upsertFromForm()){
+    toast("Salvo.");
+    closeModal();
+    render();
+  }
+});
+$("btnOutlook").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  if($("nextAction").value) addAppointmentFromComposer({silent:true});
+  if(!appointmentDrafts.length) return toast("Adicione pelo menos um compromisso.");
+  if(!outlookStatus.connected) return toast("Conecte o calendário central na aba Config.");
+  $("btnOutlook").disabled=true;
+  $("btnOutlook").textContent="Criando compromisso...";
+  try{
+    if(!(await upsertFromForm())) return;
+    const id=$("id").value;
+    const record = records.find(item=>item.id===id);
+    const pendingAppointments = normalizeAppointments(record).filter(item=>item.status==="scheduled" && !item.event_id);
+    for(const appointment of pendingAppointments){
+      await saveOutlookEvent(id, appointment.id);
+    }
+    await fetchRecords({reason:"compromissos criados",notifyNew:false});
+    closeModal();
+    render();
+    toast(`${pendingAppointments.length} appointment(s) saved to the Marel calendar.`);
+  }catch(error){
+    console.error("[CRM Outlook]",error);
+    toast(error.message || "Erro ao criar compromisso no calendário.");
+  }finally{
+    $("btnOutlook").disabled=false;
+    $("btnOutlook").textContent="Salvar e criar compromisso";
+  }
+});
+$("btnLogContact").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  const r = records.find(x=>x.id===$("id").value);
+  if(!r) return toast("Salve o cadastro antes de registrar contato.");
+  if(await registerContactNow(r)) closeModal();
+});
+
+$("btnClosePending").addEventListener("click",closePendingModal);
+$("btnCancelPending").addEventListener("click",closePendingModal);
+$("btnSavePending").addEventListener("click",async event=>{event.preventDefault();await savePendingItem();});
+$("btnCompletePending").addEventListener("click",async event=>{event.preventDefault();await completePendingItem();});
+$("btnDeletePending").addEventListener("click",async event=>{event.preventDefault();await deletePendingItem();});
+$("pendingPhotos").addEventListener("change",event=>{
+  releasePendingPreviews();
+  const files=Array.from(event.target.files||[]).slice(0,6);
+  const valid=files.filter(file=>file.type.startsWith("image/") && file.size<=8*1024*1024);
+  if(valid.length!==files.length) toast("Algumas fotos foram ignoradas por formato ou tamanho.");
+  pendingPhotosBuffer=valid.map(file=>({file,preview_url:URL.createObjectURL(file)}));
+  renderPendingPhotoGrid($("pendingId").value);
+});
+$("pendingPhotoGrid").addEventListener("click",async event=>{
+  const newButton=event.target.closest("[data-remove-new-photo]");
+  if(newButton){
+    const index=Number(newButton.dataset.removeNewPhoto);
+    const [removed]=pendingPhotosBuffer.splice(index,1);
+    if(removed?.preview_url) URL.revokeObjectURL(removed.preview_url);
+    renderPendingPhotoGrid($("pendingId").value);
+    return;
+  }
+  const savedButton=event.target.closest("[data-remove-attachment]");
+  if(!savedButton) return;
+  const attachment=pendingAttachments.find(item=>item.id===savedButton.dataset.removeAttachment);
+  if(!attachment || !confirm("Remover esta foto?")) return;
+  await sb.storage.from(PENDING_PHOTO_BUCKET).remove([attachment.object_path]);
+  const {error}=await sb.from(TBL_PENDING_ATTACHMENTS).delete().eq("id",attachment.id);
+  if(error) return toast("Erro ao remover foto.");
+  await fetchPendingData();
+  renderPendingPhotoGrid($("pendingId").value);
+});
+$("btnQuickClosed").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  const id = $("id").value;
+  if(!id) return toast("Salve antes de fechar.");
+  if(!(await upsertFromForm())) return;
+  const r = records.find(x=>x.id===id);
+  closeModal();
+  await markAsClosed(r);
+});
+$("btnQuickLost").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  const id = $("id").value;
+  if(!id) return toast("Salve antes de marcar perdido.");
+  if(!(await upsertFromForm())) return;
+  const r = records.find(x=>x.id===id);
+  closeModal();
+  await markAsLost(r);
+});
+$("btnQuickDelete").addEventListener("click", async (e)=>{
+  e.preventDefault();
+  const id = $("id").value;
+  const r = records.find(x=>x.id===id);
+  if(!r) return;
+  await deleteRecord(r);
+});
+
+/* Login events */
+$("btnLogin").addEventListener("click", (e)=>{ e.preventDefault(); doLogin(); });
+$("btnCloseLogin").addEventListener("click", closeLogin);
+$("loginModal").addEventListener("cancel", event=>{
+  if(!session?.user) event.preventDefault();
+});
+
+$("btnSignOut").addEventListener("click", ()=> doSignOut());
+$("btnSync").addEventListener("click", async ()=>{
+  if(!sb || !session?.user) return openLogin();
+  const ok = await syncController.refresh("sincronização manual", true, true);
+  if(!ok) return;
+  toast("Sincronizado com sucesso.");
+  syncController.resume("sincronização manual");
+});
+
+$("btnRetryLoad").addEventListener("click", async ()=>{
+  if(!sb || !session?.user) return openLogin();
+  bootedUserId = null;
+  await bootAfterLogin();
+});
+
+window.addEventListener("beforeinstallprompt", event=>{
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  $("btnInstall").hidden = false;
+});
+window.addEventListener("appinstalled", ()=>{
+  deferredInstallPrompt = null;
+  $("btnInstall").hidden = true;
+  toast("CRM instalado como aplicativo.");
+});
+$("btnInstall").addEventListener("click", async ()=>{
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    $("btnInstall").hidden = true;
+    return;
+  }
+  const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  toast(isiOS
+    ? "No Safari: toque em Compartilhar e depois em “Adicionar à Tela de Início”."
+    : "No menu do navegador, escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.");
+});
+
+let resizeRenderTimer = null;
+window.addEventListener("resize", ()=>{
+  clearTimeout(resizeRenderTimer);
+  resizeRenderTimer = setTimeout(()=>{ setTab(currentTab); }, 180);
+});
+
+/* Config tab button delegation */
+$("board").addEventListener("click", async (e)=>{
+  if(currentTab!=="config") return;
+  const btn = e.target.closest?.("button[data-act]");
+  if(!btn) return;
+  if(!sb || !session?.user) return toast("Sem login.");
+
+  const act = btn.dataset.act;
+
+  if(act==="connectOutlook"){
+    try{
+      const result=await callOutlook("connect");
+      if(result.authorization_url) window.location.href=result.authorization_url;
+      else{
+        await fetchOutlookStatus();
+        render();
+        toast("Calendário central já está conectado.");
+      }
+    }catch(error){
+      toast(error.message || "Erro ao iniciar conexão com o calendário.");
+    }
+    return;
+  }
+  if(act==="disconnectOutlook"){
+    if(!confirm("Disconnect the Marel calendar?")) return;
+    try{
+      await callOutlook("disconnect");
+      await fetchOutlookStatus();
+      render();
+      toast("Calendário desconectado.");
+    }catch(error){toast(error.message || "Erro ao desconectar o calendário.");}
+    return;
+  }
+
+  if(act==="addSource"){
+    const v = ($("newSource")?.value||"").trim();
+    if(!v) return toast("Digite uma origem.");
+    if(config.sources.includes(v)) return toast("Já existe.");
+    config.sources.push(v);
+    await saveConfig();
+    buildFilters();
+    render();
+    toast("Origem adicionada.");
+    return;
+  }
+  if(act==="rmSource"){
+    const idx = Number(btn.dataset.idx);
+    config.sources.splice(idx,1);
+    if(config.sources.length===0) config.sources = DEFAULT_SOURCES.slice();
+    await saveConfig();
+    buildFilters();
+    render();
+    toast("Origem removida.");
+    return;
+  }
+  if(act==="addReason"){
+    const v = ($("newReason")?.value||"").trim();
+    if(!v) return toast("Digite um motivo.");
+    if(config.lost_reasons.includes(v)) return toast("Já existe.");
+    config.lost_reasons.push(v);
+    await saveConfig();
+    buildFilters();
+    render();
+    toast("Motivo adicionado.");
+    return;
+  }
+  if(act==="rmReason"){
+    const idx = Number(btn.dataset.idx);
+    config.lost_reasons.splice(idx,1);
+    if(config.lost_reasons.length===0) config.lost_reasons = DEFAULT_LOST_REASONS.slice();
+    await saveConfig();
+    buildFilters();
+    render();
+    toast("Motivo removido.");
+    return;
+  }
+});
+
+/* Backup local (para emergência) */
+$("btnExportJson").addEventListener("click", ()=>{
+  const payload = { version:"marel_houston_crm_v1", exportedAt: nowISO(), config, profiles, records, recordEvents, partnerContents, pendingItems, pendingAttachments };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download=`crm_backup_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast("Backup exportado.");
+});
+
+$("importJson").addEventListener("change", async (e)=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+
+  if(!sb || !session?.user){
+    openLogin();
+    e.target.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = async ()=>{
+    try{
+      const obj = JSON.parse(reader.result);
+
+      if(!Array.isArray(obj.records)){
+        toast("Arquivo inválido.");
+        return;
+      }
+
+      const importedRecords = obj.records;
+      let inserted = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      for(const r of importedRecords){
+        const payload = {
+          ...(r.id ? {id:r.id} : {}),
+          first_name: (r.first_name || "").trim() || "Lead",
+          last_name: (r.last_name || "").trim() || "Online",
+          phone: (r.phone || "").trim() || "Não informado",
+          city: (r.city || "").trim() || "Não informado",
+          rooms: (r.rooms || "").trim() || "Não informado",
+          email: r.email || null,
+          estimate: r.estimate ?? null,
+          notes: r.notes || null,
+          source: r.source || "Lead Online",
+          owner_id: r.owner_id || session.user.id,
+          pipeline: r.pipeline || "lead",
+          stage: (r.record_type === "specifier"
+            ? (r.stage || SPECIFIER_STAGES[0])
+            : (r.stage || LEAD_STAGES[0])),
+          next_action: r.next_action || null,
+          lost_reason: r.lost_reason || null,
+          stage_entered_at: r.stage_entered_at || r.created_at || new Date().toISOString(),
+          created_at: r.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          rd_payload: r.rd_payload || null,
+          rd_fingerprint: r.rd_fingerprint || null,
+          rd_event_name: r.rd_event_name || null,
+          rd_conversion_id: r.rd_conversion_id || null,
+          rd_conversion_at: r.rd_conversion_at || null,
+          rd_source: r.rd_source || null,
+          record_type: r.record_type || "lead",
+          specifier_type: r.specifier_type || null,
+          company_name: r.company_name || null,
+          next_action_at: r.next_action_at || null,
+          next_action_kind: r.next_action_kind || null,
+          next_action_details: r.next_action_details || null,
+          next_action_duration_minutes: r.next_action_duration_minutes || 30,
+          next_action_reminder_minutes: r.next_action_reminder_minutes ?? 30,
+          appointments: Array.isArray(r.appointments) ? r.appointments : [],
+          outlook_event_id: r.outlook_event_id || null,
+          outlook_event_web_link: r.outlook_event_web_link || null,
+          outlook_synced_at: r.outlook_synced_at || null,
+          last_contact_at: r.last_contact_at || null,
+          lead_quality: r.lead_quality || "Unreviewed",
+          quality_notes: r.quality_notes || null,
+          property_status: r.property_status || "Não informado",
+          professional_name: r.professional_name || null,
+          has_floor_plan: typeof r.has_floor_plan === "boolean" ? r.has_floor_plan : null,
+          preferred_contact: r.preferred_contact || "Email",
+          investment_profile: r.investment_profile || "A definir",
+          decision_due_at: r.decision_due_at || null,
+          partner_classification: r.partner_classification || "Não classificado",
+          relationship_level: r.relationship_level || "Novo",
+          first_visit_at: r.first_visit_at || null,
+          region: r.region || null,
+          project_profile: r.project_profile || null,
+          client_profile: r.client_profile || null,
+          preferred_styles: Array.isArray(r.preferred_styles) ? r.preferred_styles : [],
+          preferred_environments: Array.isArray(r.preferred_environments) ? r.preferred_environments : [],
+          current_suppliers: r.current_suppliers || null,
+          valued_differentials: r.valued_differentials || null,
+          objections: r.objections || null,
+          mentioned_projects: r.mentioned_projects || null,
+          interest_tags: Array.isArray(r.interest_tags) ? r.interest_tags : [],
+          partner_origin: r.partner_origin || null,
+          cadence_type: r.cadence_type || "Manual",
+          cadence_active: Boolean(r.cadence_active),
+          cadence_started_at: r.cadence_started_at || null,
+          cadence_cycle: Number(r.cadence_cycle || 0),
+          next_action_owner: r.next_action_owner || null,
+          no_next_action_reason: r.no_next_action_reason || null,
+          interactions: Array.isArray(r.interactions) ? r.interactions : [],
+          sent_contents: Array.isArray(r.sent_contents) ? r.sent_contents : [],
+          cadence_history: Array.isArray(r.cadence_history) ? r.cadence_history : []
+        };
+
+        const alreadyExists = r.id && records.some(x => x.id === r.id);
+        if(alreadyExists){
+          skipped++;
+          continue;
+        }
+
+        const { data, error } = await sb
+          .from(TBL_RECORDS)
+          .insert(payload)
+          .select("*")
+          .single();
+
+        if(error){
+          console.error("Erro ao importar registro:", { error, recordId: r.id || null });
+          errors++;
+          continue;
+        }
+
+        if(data){
+          records.unshift(data);
+          inserted++;
+        }
+      }
+
+      if(Array.isArray(obj.partnerContents) && obj.partnerContents.length){
+        for(const content of obj.partnerContents){
+          const contentPayload = {
+            ...(content.id ? {id:content.id} : {}),
+            title:content.title || "Conteúdo sem título",
+            pillar:content.pillar || "Design e inspiração",
+            format:content.format || "Link",
+            description:content.description || null,
+            external_url:content.external_url || null,
+            tags:Array.isArray(content.tags) ? content.tags : [],
+            status:content.status === "Arquivado" ? "Arquivado" : "Ativo",
+            registered_at:content.registered_at || nowISO(),
+            notes:content.notes || null,
+            created_by:content.created_by || session.user.id
+          };
+          const {error:contentError} = await sb.from(TBL_PARTNER_CONTENTS).upsert(contentPayload, {onConflict:"id"});
+          if(contentError){ console.error("Erro ao importar conteúdo:", contentError); errors++; }
+        }
+      }
+
+      if(Array.isArray(obj.recordEvents) && obj.recordEvents.length){
+        const {data:existingEvents,error:eventsReadError} = await sb.from(TBL_EVENTS).select("record_id,event_type,occurred_at");
+        if(eventsReadError){
+          console.warn("Histórico não pôde ser conferido na importação:", eventsReadError);
+        }else{
+          const eventKeys = new Set((existingEvents || []).map(event=>`${event.record_id}|${event.event_type}|${event.occurred_at}`));
+          const restoredEvents = obj.recordEvents.filter(event=>event.record_id && event.event_type && records.some(record=>record.id===event.record_id) && !eventKeys.has(`${event.record_id}|${event.event_type}|${event.occurred_at}`)).map(event=>({
+            record_id:event.record_id,
+            event_type:event.event_type,
+            actor_id:profiles.some(profile=>profile.id===event.actor_id) ? event.actor_id : session.user.id,
+            from_value:event.from_value || null,
+            to_value:event.to_value || null,
+            metadata:event.metadata || {},
+            occurred_at:event.occurred_at || nowISO()
+          }));
+          if(restoredEvents.length){
+            const {error:eventsInsertError} = await sb.from(TBL_EVENTS).insert(restoredEvents);
+            if(eventsInsertError){ console.error("Erro ao restaurar histórico:", eventsInsertError); errors++; }
+          }
+        }
+      }
+
+      await fetchRecords();
+      render();
+
+      toast(`Importação concluída. Inseridos: ${inserted} | Ignorados: ${skipped} | Erros: ${errors}`);
+    }catch(err){
+      console.error(err);
+      toast("Falha ao importar.");
+    }
+  };
+
+  reader.readAsText(f);
+  e.target.value = "";
+});
+
+$("btnWipe").addEventListener("click", ()=>{
+  if(confirm("Limpar dados carregados na tela (não apaga do Supabase)?")){
+    records = [];
+    profiles = [];
+    render();
+    toast("Limpo (apenas local).");
+  }
+});
+
+function prepareInstallExperience(){
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  const mobileDevice = /android|iphone|ipad|ipod/i.test(navigator.userAgent) || isMobileLayout();
+  if(mobileDevice && !standalone) $("btnInstall").hidden = false;
+}
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("./service-worker.js").catch(error=>{
+      console.warn("[CRM App] Não foi possível ativar o modo instalável.", error);
+    });
+  });
+}
+
+/* Boot */
+(async function boot(){
+  handleOutlookReturn();
+  prepareInstallExperience();
+  updateAppStateBanner();
+  updateSessionLine();
+  // disable sign out / sync until configured
+  if(!isConfigured()){
+    $("btnSignOut").disabled = true;
+    $("btnSync").disabled = true;
+  }
+  setTab("leads");
+  await initSupabase();
+})();
+</script>
+<script src="partners.js"></script>
+</body>
+</html>

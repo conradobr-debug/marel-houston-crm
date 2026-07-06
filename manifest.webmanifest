@@ -1,0 +1,13 @@
+{
+  "name": "Marel Houston CRM",
+  "short_name": "Marel CRM",
+  "description": "Sales, projects, partners, appointments, and service operations for Marel Houston.",
+  "lang": "en-US",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f1ed",
+  "theme_color": "#17191a",
+  "categories": ["business", "productivity"]
+}
