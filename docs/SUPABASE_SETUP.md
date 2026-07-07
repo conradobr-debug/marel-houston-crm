@@ -34,6 +34,10 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
 
 A passing run reports `ok 1` through `ok 27`, no `not ok` lines, and finishes with `ROLLBACK`. The URL and password above are Supabase's standard local-development defaults only; do not reuse them for a hosted project.
 
+## Start the Phase 3 frontend
+
+After the database reset, configure the ignored browser runtime file and start the static preview as described in [`FRONTEND_DATA_ACCESS.md`](FRONTEND_DATA_ACCESS.md). The frontend accepts local Supabase endpoints only and automatically uses synthetic mock data when local Supabase is not configured.
+
 The local configuration deliberately disables public, email, and anonymous sign-up. Synthetic users are inserted by the local seed after the Marel workspace exists.
 
 ## Synthetic local users

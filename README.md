@@ -9,7 +9,7 @@ Independent CRM shell for Marel Houston. This repository is intentionally isolat
 - WhatsApp-specific workflows are not part of the Marel product direction.
 - Until a Marel Supabase project is configured, the application opens in safe offline-template mode.
 
-## Phase 1 database foundation
+## Local database and frontend foundation
 
 The repository includes a local-only Supabase foundation under `supabase/`:
 
@@ -20,7 +20,9 @@ The repository includes a local-only Supabase foundation under `supabase/`:
 - a private local file bucket;
 - deterministic synthetic seed data.
 
-No remote Supabase project is linked. Do not run `supabase link` or `supabase db push` during Phase 1.
+No remote Supabase project is linked. Do not run `supabase link` or `supabase db push` during local development.
+
+The Phase 3 frontend compatibility adapter reads the normalized local schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes now pass through the centralized data-access layer. An explicitly synthetic browser-local fallback remains available when local Supabase is not configured or cannot be reached.
 
 ## Local Supabase setup
 
@@ -37,9 +39,10 @@ See:
 - [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)
 - [`docs/RLS_POLICY_PLAN.md`](docs/RLS_POLICY_PLAN.md)
 - [`docs/MVP_LIMITATIONS.md`](docs/MVP_LIMITATIONS.md)
+- [`docs/FRONTEND_DATA_ACCESS.md`](docs/FRONTEND_DATA_ACCESS.md)
 
-The frontend is not connected to the new normalized schema in this phase.
+The frontend accepts only local `127.0.0.1` or `localhost` Supabase endpoints during Phase 3.
 
 ## Local preview
 
-Serve this directory with any static HTTP server and open `index.html`. Do not add production credentials to tracked files.
+Serve this directory with any static HTTP server and open `index.html`. See `docs/FRONTEND_DATA_ACCESS.md` for local runtime configuration and fallback behavior. Do not add production credentials to tracked files.
