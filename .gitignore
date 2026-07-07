@@ -4,7 +4,7 @@
 !.env.example
 config/runtime-config.js
 supabase/.temp/
+supabase/.branches/
 node_modules/
 dist/
 coverage/
-

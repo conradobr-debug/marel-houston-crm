@@ -16,9 +16,23 @@ From `04_apps/marel-crm/`:
 supabase start
 supabase db reset
 supabase status
+supabase test db supabase/tests/database --local
 ```
 
 `supabase db reset` applies the migrations in order and then runs `supabase/seed.sql`.
+
+The database test command runs the pgTAP RLS suite against the local database. The suite opens a transaction, creates temporary synthetic isolation records, tests each application role, and rolls everything back. Run it after every migration or policy change.
+
+If OrbStack stalls while the Supabase CLI starts its containerized `pg_prove` runner, restart OrbStack without resetting its data and run the same suite directly against the local database:
+
+```sh
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+  -X -v ON_ERROR_STOP=1 \
+  -f supabase/tests/database/rls_policies.test.sql
+```
+
+A passing run reports `ok 1` through `ok 27`, no `not ok` lines, and finishes with `ROLLBACK`. The URL and password above are Supabase's standard local-development defaults only; do not reuse them for a hosted project.
 
 The local configuration deliberately disables public, email, and anonymous sign-up. Synthetic users are inserted by the local seed after the Marel workspace exists.
 
@@ -55,4 +69,3 @@ Use `supabase db reset` whenever migrations or seed data change. A successful re
 If the CLI version generates a different PostgreSQL major version than `supabase/config.toml`, update the local configuration in a dedicated review before starting the stack.
 
 The frontend is not connected to this schema in Phase 1. The existing application remains in safe offline-template mode.
-
