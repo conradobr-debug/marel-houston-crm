@@ -20,27 +20,27 @@ const INITIAL_CADENCE = [
   {day:7, key:"initial_d7", title:"Send relevant content", channel:"Email / content", objective:"Share one useful item aligned with the partner's interests."},
   {day:15, key:"initial_d15", title:"Review active projects", channel:"Phone Call", objective:"Identify projects approaching the cabinetry or millwork phase."},
   {day:30, key:"initial_d30", title:"Share a case study", channel:"Email / content", objective:"Demonstrate a relevant design, technical, or project-delivery solution."},
-  {day:45, key:"initial_d45", title:"Contato estratégico do proprietário", channel:"Ligação, café ou convite", objective:"Reforçar o peso institucional da parceria.", classification:"A — Estratégico", strategic:true},
+  {day:45, key:"initial_d45", title:"Principal relationship outreach", channel:"Phone call, coffee, or invitation", objective:"Reinforce Marel Houston's commitment to the partnership.", classification:"A — Strategic", strategic:true},
   {day:60, key:"initial_d60", title:"Identify the first opportunity", channel:"Phone Call or Email", objective:"Ask whether there is a suitable project where Marel Houston can contribute."},
-  {day:90, key:"initial_d90", title:"Revisar relacionamento e classificação", channel:"Revisão interna ou contato", objective:"Classificar o parceiro, revisar potencial e definir a cadência permanente."}
+  {day:90, key:"initial_d90", title:"Review relationship and classification", channel:"Internal review or outreach", objective:"Review the partner's potential and select the appropriate ongoing cadence."}
 ];
 const PERMANENT_CADENCES = {
-  "Estratégico": [
+  "Strategic": [
     {days:18, title:"Personalized content follow-up", channel:"Email / content"},
-    {days:30, title:"Ligação de relacionamento", channel:"Ligação", ownerName:"Marianna"},
+    {days:30, title:"Relationship call", channel:"Phone Call", ownerName:"Marianna"},
     {days:42, title:"Content or invitation", channel:"Email / invitation"},
-    {days:55, title:"Contato institucional", channel:"Ligação, café ou convite", ownerName:"Conrado"},
-    {days:90, title:"Revisão estratégica trimestral", channel:"Revisão interna"}
+    {days:55, title:"Principal relationship outreach", channel:"Phone call, coffee, or invitation", ownerName:"Conrado"},
+    {days:90, title:"Quarterly strategic review", channel:"Internal review"}
   ],
-  "Potencial": [
+  "Potential": [
     {days:30, title:"Send relevant content", channel:"Email / content"},
-    {days:60, title:"Ligação, convite ou contato pessoal", channel:"Ligação ou convite"},
-    {days:90, title:"Revisar classificação", channel:"Revisão interna"}
+    {days:60, title:"Call, invitation, or personal outreach", channel:"Phone Call or invitation"},
+    {days:90, title:"Review classification", channel:"Internal review"}
   ],
-  "Relacionamento": [
+  "Relationship": [
     {days:50, title:"Relationship content or invitation", channel:"Email / invitation"},
     {days:75, title:"Reactivation outreach", channel:"Email or Phone Call"},
-    {days:90, title:"Revisar classificação", channel:"Revisão interna"}
+    {days:90, title:"Review classification", channel:"Internal review"}
   ]
 };
 
@@ -73,7 +73,7 @@ function partnerDaysWithoutContact(record){
   return Math.max(0, daysBetween(new Date(value), new Date()));
 }
 function partnerNeedsNextAction(record){ return PARTNER_REQUIRED_NEXT_ACTION_STAGES.has(record.stage); }
-function partnerHasOpportunity(record){ return ["Oportunidade identificada", "Projeto recebido", "Partner ativo"].includes(record.stage); }
+function partnerHasOpportunity(record){ return ["Qualified Partner", "Active Referral Partner", "Strategic Partner"].includes(record.stage); }
 function partnerOwnerOption(id){
   return profiles.map(profile=>`<option value="${escapeHtml(profile.id)}" ${profile.id===id?"selected":""}>${escapeHtml(profile.display_name)}</option>`).join("");
 }
@@ -103,7 +103,7 @@ function partnerCreateInitialCadence(record, baseValue, classification, ownerId)
       details:item.objective, objective:item.objective, channel:item.channel,
       owner_id:item.strategic ? (conrado?.id || null) : (ownerId || null),
       owner_name:item.strategic ? "Conrado" : profileNameById(ownerId),
-      source:"cadence_auto", cadence_key:item.key, cadence_type:"Inicial 90 dias", cadence_day:item.day,
+      source:"cadence_auto", cadence_key:item.key, cadence_type:"Initial 90 Days", cadence_day:item.day,
       duration_minutes:30, reminder_minutes:30, status:"scheduled"
     }));
 }
@@ -115,7 +115,7 @@ function partnerNextPermanentAppointment(record, completedAt=new Date().toISOStr
   const named = item.ownerName ? partnerProfileByName(item.ownerName) : null;
   return partnerNormalizeAppointment({
     id:crypto.randomUUID(), starts_at:partnerAdjustedDate(completedAt, item.days), kind:item.title,
-    details:`Próxima ação da cadência permanente ${record.cadence_type}.`, channel:item.channel,
+    details:`Next action in the ${record.cadence_type} ongoing cadence.`, channel:item.channel,
     owner_id:named?.id || record.owner_id || null, owner_name:item.ownerName || profileNameById(record.owner_id),
     source:"cadence_auto", cadence_key:`permanent_${record.cadence_type}_${cycle+1}`,
     cadence_type:record.cadence_type, cadence_cycle:cycle+1,
@@ -135,12 +135,12 @@ function partnerInjectInterface(){
   extraFilters.className = "partnerExtraFilters";
   extraFilters.hidden = true;
   extraFilters.innerHTML = `
-    <div class="field"><label>Classificação</label><select id="fPartnerClassification"><option>All</option>${PARTNER_CLASSIFICATIONS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
-    <div class="field"><label>Nível</label><select id="fRelationshipLevel"><option>All</option>${RELATIONSHIP_LEVELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
-    <div class="field"><label>Cadência</label><select id="fPartnerCadence"><option>All</option><option>Ativa</option><option>Inativa</option></select></div>
-    <div class="field"><label>Oportunidade</label><select id="fPartnerOpportunity"><option>All</option><option>Com oportunidade</option><option>Sem oportunidade</option></select></div>
-    <div class="field"><label>Follow-Up</label><select id="fPartnerAttention"><option>All</option><option>Sem próxima ação</option><option>Contato vencido</option><option>Adormecidos</option></select></div>
-    <button class="primary" id="btnContentBank" type="button">Banco de conteúdos</button>`;
+    <div class="field"><label>Classification</label><select id="fPartnerClassification"><option>All</option>${PARTNER_CLASSIFICATIONS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
+    <div class="field"><label>Relationship level</label><select id="fRelationshipLevel"><option>All</option>${RELATIONSHIP_LEVELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
+    <div class="field"><label>Cadence</label><select id="fPartnerCadence"><option>All</option><option>Active</option><option>Inactive</option></select></div>
+    <div class="field"><label>Opportunity</label><select id="fPartnerOpportunity"><option>All</option><option>With opportunity</option><option>No opportunity</option></select></div>
+    <div class="field"><label>Follow-up</label><select id="fPartnerAttention"><option>All</option><option>No next action</option><option>Overdue contact</option><option>Dormant</option></select></div>
+    <button class="primary" id="btnContentBank" type="button">Content library</button>`;
   document.querySelector(".toolbar")?.appendChild(extraFilters);
   [["fPartnerClassification","partnerClassification"],["fRelationshipLevel","relationshipLevel"],["fPartnerCadence","cadence"],["fPartnerOpportunity","opportunity"],["fPartnerAttention","attention"]].forEach(([id,key])=>{
     $(id).addEventListener("change", event=>{ filters[key]=event.target.value; render(); });
@@ -149,9 +149,9 @@ function partnerInjectInterface(){
 
   const form = $("form");
   form.insertAdjacentHTML("afterbegin", `<div id="partnerFormTabs" class="partnerFormTabs col-12" hidden>
-    <button type="button" class="active" data-partner-form-tab="basic">Dados básicos</button>
-    <button type="button" data-partner-form-tab="profile">Perfil e potencial</button>
-    <button type="button" data-partner-form-tab="relationship">Relacionamento e agenda</button>
+    <button type="button" class="active" data-partner-form-tab="basic">Basic details</button>
+    <button type="button" data-partner-form-tab="profile">Profile and potential</button>
+    <button type="button" data-partner-form-tab="relationship">Relationship and schedule</button>
   </div>`);
   $("partnerFormTabs").addEventListener("click", event=>{
     const button = event.target.closest("[data-partner-form-tab]");
@@ -159,33 +159,33 @@ function partnerInjectInterface(){
   });
 
   $("wrapCompanyName").insertAdjacentHTML("afterend", `<section id="partnerProfileSection" class="partnerOnly partnerFormSection col-12" data-partner-group="profile" hidden>
-    <div class="partnerSectionTitle"><div><b>Perfil e potencial</b><span>Informações para personalizar o relacionamento.</span></div></div>
+    <div class="partnerSectionTitle"><div><b>Profile and potential</b><span>Information used to personalize the relationship.</span></div></div>
     <div class="partnerSectionGrid">
-      <div class="col-4"><label>Classificação do parceiro</label><select id="partnerClassification">${PARTNER_CLASSIFICATIONS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><div class="fieldHelp">A: estratégico e com possibilidade concreta de negócios. B: bom potencial em desenvolvimento. C: relacionamento inicial ou de menor aderência.</div></div>
-      <div class="col-4"><label>Nível de relacionamento</label><select id="relationshipLevel">${RELATIONSHIP_LEVELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
-      <div class="col-4"><label>Source do parceiro</label><input id="partnerOrigin" /></div>
-      <div class="col-4"><label>Região de atuação</label><input id="partnerRegion" /></div>
-      <div class="col-4"><label>Data da primeira visita</label><input id="firstVisitAt" type="date" /></div>
-      <div class="col-4"><label>Perfil financeiro dos clientes</label><input id="partnerClientProfile" /></div>
-      <div class="col-6"><label>Perfil dos projetos</label><textarea id="partnerProjectProfile"></textarea></div>
-      <div class="col-6"><label>Estilo predominante</label><input id="preferredStyles" placeholder="Separe por vírgulas" /></div>
-      <div class="col-6"><label>Room / Spaces que costuma especificar</label><input id="preferredEnvironments" placeholder="Separe por vírgulas" /></div>
-      <div class="col-6"><label>Marcas ou fornecedores com quem já trabalha</label><textarea id="currentSuppliers"></textarea></div>
+      <div class="col-4"><label>Partner classification</label><select id="partnerClassification">${PARTNER_CLASSIFICATIONS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><div class="fieldHelp">A: strategic with clear business potential. B: promising and developing. C: early-stage relationship or limited current fit.</div></div>
+      <div class="col-4"><label>Relationship level</label><select id="relationshipLevel">${RELATIONSHIP_LEVELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
+      <div class="col-4"><label>Partner source</label><input id="partnerOrigin" /></div>
+      <div class="col-4"><label>Service area</label><input id="partnerRegion" /></div>
+      <div class="col-4"><label>First visit date</label><input id="firstVisitAt" type="date" /></div>
+      <div class="col-4"><label>Typical client investment profile</label><input id="partnerClientProfile" /></div>
+      <div class="col-6"><label>Typical project profile</label><textarea id="partnerProjectProfile"></textarea></div>
+      <div class="col-6"><label>Primary design style</label><input id="preferredStyles" placeholder="Separate with commas" /></div>
+      <div class="col-6"><label>Commonly specified rooms / spaces</label><input id="preferredEnvironments" placeholder="Separate with commas" /></div>
+      <div class="col-6"><label>Current brands or suppliers</label><textarea id="currentSuppliers"></textarea></div>
       <div class="col-6"><label>What the partner values most about Marel</label><textarea id="valuedDifferentials"></textarea></div>
-      <div class="col-6"><label>Objeções ou inseguranças percebidas</label><textarea id="partnerObjections"></textarea></div>
-      <div class="col-12"><label>Projetos ou obras mencionados</label><textarea id="mentionedProjects"></textarea></div>
-      <div class="col-12"><label>Interesses e temas preferidos</label><div class="tagPicker" id="partnerInterestTags">${PARTNER_INTEREST_TAGS.map(tag=>`<label><input type="checkbox" value="${escapeHtml(tag)}" /> ${escapeHtml(tag)}</label>`).join("")}</div></div>
+      <div class="col-6"><label>Observed objections or concerns</label><textarea id="partnerObjections"></textarea></div>
+      <div class="col-12"><label>Projects mentioned</label><textarea id="mentionedProjects"></textarea></div>
+      <div class="col-12"><label>Preferred interests and topics</label><div class="tagPicker" id="partnerInterestTags">${PARTNER_INTEREST_TAGS.map(tag=>`<label><input type="checkbox" value="${escapeHtml(tag)}" /> ${escapeHtml(tag)}</label>`).join("")}</div></div>
     </div>
   </section>
   <section id="partnerRelationshipSection" class="partnerOnly partnerFormSection col-12" data-partner-group="relationship" hidden>
-    <div class="partnerSectionTitle"><div><b>Cadência de relacionamento</b><span>O parceiro continua com um responsável principal.</span></div></div>
+    <div class="partnerSectionTitle"><div><b>Relationship cadence</b><span>The partner keeps one primary relationship owner.</span></div></div>
     <div class="partnerSectionGrid">
-      <div class="col-3"><label>Cadência ativa</label><select id="cadenceActive"><option value="false">Inativa</option><option value="true">Ativa</option></select></div>
-      <div class="col-3"><label>Type da cadência</label><select id="cadenceType"><option>Manual</option><option>Inicial 90 dias</option><option>Estratégico</option><option>Potencial</option><option>Relacionamento</option></select></div>
-      <div class="col-3"><label>Data de início</label><input id="cadenceStartedAt" type="date" /></div>
-      <div class="col-3"><label>Owner pela próxima ação</label><select id="nextActionOwner"></select></div>
-      <div class="col-12 cadenceActivation" id="cadenceActivation" hidden><label><input id="activateInitialCadence" type="checkbox" checked /> Ativar a cadência inicial de relacionamento de 90 dias ao salvar</label></div>
-      <div class="col-12"><div class="timelineHeader"><b>Linha do tempo</b><select id="timelineFilter"><option value="all">Tudo</option><option value="contacts">Contatos</option><option value="appointments">Compromissos</option><option value="contents">Conteúdos</option><option value="stages">Stages</option><option value="opportunities">Oportunidades</option></select></div><div id="partnerTimeline" class="partnerTimeline"></div></div>
+      <div class="col-3"><label>Active cadence</label><select id="cadenceActive"><option value="false">Inactive</option><option value="true">Active</option></select></div>
+      <div class="col-3"><label>Cadence type</label><select id="cadenceType"><option>Manual</option><option>Initial 90 Days</option><option>Strategic</option><option>Potential</option><option>Relationship</option></select></div>
+      <div class="col-3"><label>Start date</label><input id="cadenceStartedAt" type="date" /></div>
+      <div class="col-3"><label>Next-action owner</label><select id="nextActionOwner"></select></div>
+      <div class="col-12 cadenceActivation" id="cadenceActivation" hidden><label><input id="activateInitialCadence" type="checkbox" checked /> Activate the initial 90-day relationship cadence when saving</label></div>
+      <div class="col-12"><div class="timelineHeader"><b>Timeline</b><select id="timelineFilter"><option value="all">All</option><option value="contacts">Contacts</option><option value="appointments">Appointments</option><option value="contents">Content</option><option value="stages">Stages</option><option value="opportunities">Opportunities</option></select></div><div id="partnerTimeline" class="partnerTimeline"></div></div>
     </div>
   </section>`);
   $("timelineFilter").addEventListener("change", ()=>partnerRenderTimeline(records.find(r=>r.id===$("id").value)));
@@ -204,27 +204,27 @@ function partnerInjectInterface(){
 }
 
 function partnerDialogsMarkup(){
-  return `<dialog id="contactModal" class="partnerDialog"><div class="modalHd"><div><div class="modalTitle">Log activity</div><div class="modalSub" id="contactPartnerName"></div></div><button class="ghost" type="button" id="btnCloseContact">Fechar</button></div>
+  return `<dialog id="contactModal" class="partnerDialog"><div class="modalHd"><div><div class="modalTitle">Log activity</div><div class="modalSub" id="contactPartnerName"></div></div><button class="ghost" type="button" id="btnCloseContact">Close</button></div>
     <div class="modalBd"><form class="form" id="contactForm">
-      <div class="col-4"><label>Data e horário</label><input id="contactAt" type="datetime-local" /></div>
+      <div class="col-4"><label>Date and time</label><input id="contactAt" type="datetime-local" /></div>
       <div class="col-4"><label>Owner</label><select id="contactOwner"></select></div>
-      <div class="col-4"><label>Canal</label><select id="contactChannel">${CONTACT_CHANNELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
-      <div class="col-4"><label>Activity type</label><input id="contactType" placeholder="Ex.: acompanhamento, prospecção" /></div>
-      <div class="col-4"><label>Resultado</label><select id="contactResult">${CONTACT_RESULTS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
-      <div class="col-4"><label>Compromisso relacionado</label><select id="relatedAppointment"><option value="">Nenhum</option></select></div>
-      <div class="col-6"><label>Objetivo</label><textarea id="contactObjective"></textarea></div>
-      <div class="col-6"><label>Resumo do que aconteceu</label><textarea id="contactSummary" required></textarea></div>
-      <div class="col-6"><label>Projeto ou obra mencionada</label><textarea id="contactProject"></textarea></div>
-      <div class="col-6"><label>Conteúdo enviado</label><select id="contactContent"><option value="">Nenhum</option></select><div id="contentSuggestions" class="fieldHelp"></div></div>
-      <div class="col-4"><label>Próxima ação</label><input id="contactNextAction" /></div>
-      <div class="col-4"><label>Data da próxima ação</label><input id="contactNextAt" type="datetime-local" /></div>
-      <div class="col-4"><label>Owner pela próxima ação</label><select id="contactNextOwner"></select></div>
-    </form></div><div class="modalFt"><div class="note">Ao salvar, o histórico e o último contato serão atualizados.</div><div class="modalQuick"><button class="ghost" type="button" id="btnCancelContact">Cancel</button><button class="primary" type="button" id="btnSaveContact">Save contato</button></div></div></dialog>
+      <div class="col-4"><label>Channel</label><select id="contactChannel">${CONTACT_CHANNELS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
+      <div class="col-4"><label>Activity type</label><input id="contactType" placeholder="Example: follow-up or prospecting" /></div>
+      <div class="col-4"><label>Result</label><select id="contactResult">${CONTACT_RESULTS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select></div>
+      <div class="col-4"><label>Related appointment</label><select id="relatedAppointment"><option value="">None</option></select></div>
+      <div class="col-6"><label>Objective</label><textarea id="contactObjective"></textarea></div>
+      <div class="col-6"><label>Activity summary</label><textarea id="contactSummary" required></textarea></div>
+      <div class="col-6"><label>Project mentioned</label><textarea id="contactProject"></textarea></div>
+      <div class="col-6"><label>Content sent</label><select id="contactContent"><option value="">None</option></select><div id="contentSuggestions" class="fieldHelp"></div></div>
+      <div class="col-4"><label>Next action</label><input id="contactNextAction" /></div>
+      <div class="col-4"><label>Next-action date</label><input id="contactNextAt" type="datetime-local" /></div>
+      <div class="col-4"><label>Next-action owner</label><select id="contactNextOwner"></select></div>
+    </form></div><div class="modalFt"><div class="note">Saving updates the timeline and last-contact date.</div><div class="modalQuick"><button class="ghost" type="button" id="btnCancelContact">Cancel</button><button class="primary" type="button" id="btnSaveContact">Save activity</button></div></div></dialog>
 
-  <dialog id="contentBankModal" class="contentBankDialog"><div class="modalHd"><div><div class="modalTitle">Banco de conteúdos</div><div class="modalSub">Marel references for professional partner relationships.</div></div><button class="ghost" type="button" id="btnCloseContentBank">Fechar</button></div>
-    <div class="modalBd contentBankLayout"><form id="contentForm" class="contentEditor"><input id="contentId" type="hidden" /><label>Title</label><input id="contentTitle" required /><label>Pilar</label><select id="contentPillar">${CONTENT_PILLARS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Formato</label><select id="contentFormat">${CONTENT_FORMATS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Descrição</label><textarea id="contentDescription"></textarea><label>Link externo</label><input id="contentUrl" type="url" placeholder="Google Drive, site, Instagram, YouTube ou catálogo" /><label>Tags</label><input id="contentTags" placeholder="Separe por vírgulas" /><label>Status</label><select id="contentStatus"><option>Ativo</option><option>Arquivado</option></select><label>Notes internas</label><textarea id="contentNotes"></textarea><button class="primary" type="button" id="btnSaveContent">Save conteúdo</button><button class="ghost" type="button" id="btnNewContent">Limpar formulário</button></form><div><div class="contentListTools"><input id="contentSearch" placeholder="Searchr conteúdo ou tag" /><select id="contentStatusFilter"><option>Ativo</option><option>Arquivado</option><option>All</option></select></div><div id="contentList" class="contentList"></div></div></div></dialog>
+  <dialog id="contentBankModal" class="contentBankDialog"><div class="modalHd"><div><div class="modalTitle">Content library</div><div class="modalSub">Marel references for professional partner relationships.</div></div><button class="ghost" type="button" id="btnCloseContentBank">Close</button></div>
+    <div class="modalBd contentBankLayout"><form id="contentForm" class="contentEditor"><input id="contentId" type="hidden" /><label>Title</label><input id="contentTitle" required /><label>Pillar</label><select id="contentPillar">${CONTENT_PILLARS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Format</label><select id="contentFormat">${CONTENT_FORMATS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Description</label><textarea id="contentDescription"></textarea><label>External link</label><input id="contentUrl" type="url" placeholder="Google Drive, website, Instagram, YouTube, or catalog" /><label>Tags</label><input id="contentTags" placeholder="Separate with commas" /><label>Status</label><select id="contentStatus"><option>Active</option><option>Archived</option></select><label>Internal notes</label><textarea id="contentNotes"></textarea><button class="primary" type="button" id="btnSaveContent">Save content</button><button class="ghost" type="button" id="btnNewContent">Clear form</button></form><div><div class="contentListTools"><input id="contentSearch" placeholder="Search content or tags" /><select id="contentStatusFilter"><option>Active</option><option>Archived</option><option>All</option></select></div><div id="contentList" class="contentList"></div></div></div></dialog>
 
-  <dialog id="nextActionWarning" class="smallDecisionDialog"><div class="modalHd"><div class="modalTitle">Próxima ação necessária</div></div><div class="modalBd"><p>Este parceiro ficará sem acompanhamento. Deseja salvar mesmo assim?</p><div id="nextActionReasonWrap" hidden><label>Justificativa</label><textarea id="nextActionReason"></textarea></div></div><div class="modalFt"><button class="ghost" type="button" data-next-decision="cancel">Cancel</button><button class="ghost" type="button" data-next-decision="create">Criar próxima ação</button><button class="danger" type="button" data-next-decision="justify">Save com justificativa</button></div></dialog>`;
+  <dialog id="nextActionWarning" class="smallDecisionDialog"><div class="modalHd"><div class="modalTitle">Next action required</div></div><div class="modalBd"><p>This partner will have no scheduled follow-up. Save anyway?</p><div id="nextActionReasonWrap" hidden><label>Reason</label><textarea id="nextActionReason"></textarea></div></div><div class="modalFt"><button class="ghost" type="button" data-next-decision="cancel">Cancel</button><button class="ghost" type="button" data-next-decision="create">Create next action</button><button class="danger" type="button" data-next-decision="justify">Save with reason</button></div></dialog>`;
 }
 
 function partnerBindDialogs(){
@@ -253,7 +253,7 @@ function partnerSetSelectedTags(tags){
 }
 function partnerPopulateFields(record){
   $("partnerClassification").value = PARTNER_CLASSIFICATIONS.includes(record?.partner_classification) ? record.partner_classification : "Unclassified";
-  $("relationshipLevel").value = RELATIONSHIP_LEVELS.includes(record?.relationship_level) ? record.relationship_level : "Novo";
+  $("relationshipLevel").value = RELATIONSHIP_LEVELS.includes(record?.relationship_level) ? record.relationship_level : "New";
   $("partnerOrigin").value = record?.partner_origin || "";
   $("partnerRegion").value = record?.region || "";
   $("firstVisitAt").value = record?.first_visit_at ? inputDateValue(new Date(record.first_visit_at)) : "";
@@ -267,7 +267,7 @@ function partnerPopulateFields(record){
   $("mentionedProjects").value = record?.mentioned_projects || "";
   partnerSetSelectedTags(record?.interest_tags || []);
   $("cadenceActive").value = String(Boolean(record?.cadence_active));
-  $("cadenceType").value = ["Manual","Inicial 90 dias","Estratégico","Potencial","Relacionamento"].includes(record?.cadence_type) ? record.cadence_type : "Manual";
+  $("cadenceType").value = ["Manual","Initial 90 Days","Strategic","Potential","Relationship"].includes(record?.cadence_type) ? record.cadence_type : "Manual";
   $("cadenceStartedAt").value = record?.cadence_started_at ? inputDateValue(new Date(record.cadence_started_at)) : "";
   $("nextActionOwner").innerHTML = partnerOwnerOption(record?.next_action_owner || record?.owner_id || session?.user?.id);
   $("activateInitialCadence").checked = true;
@@ -275,7 +275,7 @@ function partnerPopulateFields(record){
   partnerRenderTimeline(record);
 }
 function partnerUpdateCadenceActivation(record=null){
-  const shouldOffer = $("recordType").value === "specifier" && $("stage").value === "Visitou a loja" && !record?.cadence_active;
+  const shouldOffer = $("recordType").value === "specifier" && $("stage").value === "Intro Meeting" && !record?.cadence_active;
   $("cadenceActivation").hidden = !shouldOffer;
   if(shouldOffer && !$("firstVisitAt").value) $("firstVisitAt").value = inputDateValue(new Date());
 }
@@ -317,7 +317,7 @@ function partnerAskNoNextAction(){
         $("nextActionReason").focus();
         return;
       }
-      if(decision === "justify" && !$("nextActionReason").value.trim()) return toast("Informe a justificativa.");
+      if(decision === "justify" && !$("nextActionReason").value.trim()) return toast("Enter a reason.");
       dialog.removeEventListener("click", handler);
       dialog.close();
       resolve({decision, reason:$("nextActionReason").value.trim()});
@@ -331,12 +331,12 @@ function partnerTimelineItems(record){
   if(!record) return [];
   const items = [];
   recordEvents.filter(event=>event.record_id===record.id).forEach(event=>items.push({
-    at:event.occurred_at, type:event.event_type, title:({created:"Cadastro",stage_changed:"Stage changed",followup_scheduled:"Compromisso criado",contact_logged:"Contato realizado",classification_changed:"Classificação alterada",relationship_changed:"Nível de relacionamento alterado",cadence_activated:"Cadência ativada",cadence_paused:"Cadência pausada",owner_changed:"Owner alterado"})[event.event_type] || event.event_type,
+    at:event.occurred_at, type:event.event_type, title:({created:"Record created",stage_changed:"Stage changed",followup_scheduled:"Appointment created",contact_logged:"Activity logged",classification_changed:"Classification changed",relationship_changed:"Relationship level changed",cadence_activated:"Cadence activated",cadence_paused:"Cadence paused",owner_changed:"Owner changed"})[event.event_type] || event.event_type,
     detail:event.to_value || ""
   }));
-  (record.interactions || []).forEach(item=>items.push({at:item.at, type:item.result==="Oportunidade identificada"?"opportunity":item.result==="Projeto recebido"?"project_received":"contact_logged", title:`${item.result || "Contato"} • ${item.channel || ""}`, detail:item.summary || item.objective || ""}));
-  (record.sent_contents || []).forEach(item=>items.push({at:item.sent_at, type:"content_sent", title:`Conteúdo enviado • ${item.title || "Conteúdo"}`, detail:item.notes || item.channel || ""}));
-  normalizeAppointments(record).forEach(item=>items.push({at:item.completed_at || item.starts_at, type:item.status==="completed"?"appointment_completed":"followup_scheduled", title:`${item.status==="completed"?"Compromisso concluído":"Compromisso"} • ${item.kind}`, detail:item.details || ""}));
+  (record.interactions || []).forEach(item=>items.push({at:item.at, type:item.result==="Opportunity Identified"?"opportunity":item.result==="Project Referred"?"project_received":"contact_logged", title:`${item.result || "Activity"} • ${item.channel || ""}`, detail:item.summary || item.objective || ""}));
+  (record.sent_contents || []).forEach(item=>items.push({at:item.sent_at, type:"content_sent", title:`Content sent • ${item.title || "Content"}`, detail:item.notes || item.channel || ""}));
+  normalizeAppointments(record).forEach(item=>items.push({at:item.completed_at || item.starts_at, type:item.status==="completed"?"appointment_completed":"followup_scheduled", title:`${item.status==="completed"?"Appointment completed":"Appointment"} • ${item.kind}`, detail:item.details || ""}));
   return items.filter(item=>item.at).sort((a,b)=>new Date(b.at)-new Date(a.at));
 }
 function partnerRenderTimeline(record){
@@ -344,7 +344,7 @@ function partnerRenderTimeline(record){
   const filter = $("timelineFilter").value;
   const groups = {contacts:["contact_logged"],appointments:["followup_scheduled","appointment_completed"],contents:["content_sent"],stages:["stage_changed"],opportunities:["opportunity","project_received"]};
   const items = partnerTimelineItems(record).filter(item=>filter==="all" || (groups[filter] || []).includes(item.type));
-  $("partnerTimeline").innerHTML = items.length ? items.slice(0,100).map(item=>`<div class="timelineItem"><time>${escapeHtml(fmtBRDateTime(item.at))}</time><div><b>${escapeHtml(item.title)}</b>${item.detail?`<p>${escapeHtml(item.detail)}</p>`:""}</div></div>`).join("") : `<div class="empty">O histórico aparecerá conforme o relacionamento for registrado.</div>`;
+  $("partnerTimeline").innerHTML = items.length ? items.slice(0,100).map(item=>`<div class="timelineItem"><time>${escapeHtml(fmtBRDateTime(item.at))}</time><div><b>${escapeHtml(item.title)}</b>${item.detail?`<p>${escapeHtml(item.detail)}</p>`:""}</div></div>`).join("") : `<div class="empty">The timeline will appear as relationship activity is logged.</div>`;
 }
 
 const baseNormalizeAppointments = normalizeAppointments;
@@ -358,7 +358,7 @@ openModal = function(record=null, options={}){
   $("partnerFormTabs").hidden = !specifier;
   document.querySelectorAll(".partnerOnly").forEach(section=>section.hidden = true);
   if(specifier){
-    $("modalTitle").textContent = record ? "Detalhes do parceiro" : "Novo parceiro";
+    $("modalTitle").textContent = record ? "Partner details" : "New partner";
     document.querySelector(".appointmentComposerTitle").textContent = "Relationship schedule";
     partnerPopulateFields(record);
     partnerSelectFormTab(options.focusSchedule ? "relationship" : "basic");
@@ -384,17 +384,17 @@ upsertFromForm = async function(){
   if($("recordType").value !== "specifier") return baseUpsertFromForm();
   const existing = records.find(record=>record.id===$("id").value) || null;
   if($("nextAction").value) addAppointmentFromComposer({silent:true});
-  const shouldActivate = $("stage").value === "Visitou a loja" && $("activateInitialCadence").checked && !existing?.cadence_active;
+  const shouldActivate = $("stage").value === "Intro Meeting" && $("activateInitialCadence").checked && !existing?.cadence_active;
   if(shouldActivate){
     const baseDate = $("firstVisitAt").value ? localScheduleIso($("firstVisitAt").value, "12:00") : nowISO();
     appointmentDrafts.push(...partnerCreateInitialCadence({...(existing||{}), appointments:appointmentDrafts}, baseDate, $("partnerClassification").value, $("owner").value));
     $("cadenceActive").value = "true";
-    $("cadenceType").value = "Inicial 90 dias";
+    $("cadenceType").value = "Initial 90 Days";
     $("cadenceStartedAt").value = inputDateValue(new Date(baseDate));
   }
-  if(!shouldActivate && $("cadenceActive").value === "true" && $("cadenceType").value === "Inicial 90 dias" && $("partnerClassification").value === "A — Estratégico"){
+  if(!shouldActivate && $("cadenceActive").value === "true" && $("cadenceType").value === "Initial 90 Days" && $("partnerClassification").value === "A — Strategic"){
     const start = $("cadenceStartedAt").value ? localScheduleIso($("cadenceStartedAt").value, "12:00") : (existing?.cadence_started_at || existing?.first_visit_at || nowISO());
-    appointmentDrafts.push(...partnerCreateInitialCadence({...(existing||{}),appointments:appointmentDrafts}, start, "A — Estratégico", $("owner").value));
+    appointmentDrafts.push(...partnerCreateInitialCadence({...(existing||{}),appointments:appointmentDrafts}, start, "A — Strategic", $("owner").value));
   }
   if($("cadenceActive").value === "true" && PERMANENT_CADENCES[$("cadenceType").value] && !appointmentDrafts.some(item=>item.status==="scheduled" && item.starts_at)){
     const cadenceRecord = {...(existing||{}),cadence_type:$("cadenceType").value,owner_id:$("owner").value,cadence_cycle:Number(existing?.cadence_cycle||0)};
@@ -419,13 +419,13 @@ upsertFromForm = async function(){
   payload.no_next_action_reason = hasScheduled ? null : reason;
   if(shouldActivate){
     payload.cadence_active = true;
-    payload.cadence_type = "Inicial 90 dias";
+    payload.cadence_type = "Initial 90 Days";
     payload.cadence_started_at = payload.first_visit_at || nowISO();
     payload.cadence_cycle = 1;
-    payload.cadence_history = [...(existing?.cadence_history || []), {at:nowISO(), action:"activated", type:"Inicial 90 dias", actor_id:session.user.id}];
+    payload.cadence_history = [...(existing?.cadence_history || []), {at:nowISO(), action:"activated", type:"Initial 90 Days", actor_id:session.user.id}];
   }
   const {data,error} = await sb.from(TBL_RECORDS).update(payload).eq("id", id).select("*").single();
-  if(error){ console.error("[CRM Professional Partners] Erro ao salvar campos de relacionamento.", error); toast("Cadastro salvo, mas os campos de relacionamento exigem a nova migração."); return false; }
+  if(error){ console.error("[CRM Professional Partners] Could not save relationship fields.", error); toast("The record was saved, but the relationship fields require the current database migration."); return false; }
   const index = records.findIndex(record=>record.id===id);
   if(index>=0) records[index]=data;
   return true;
@@ -435,15 +435,15 @@ const baseDatasetForTab = datasetForTab;
 datasetForTab = function(){
   let data = baseDatasetForTab();
   if(currentTab !== "specifiers") return data;
-  const legacyStages = {"Primeiro Contato":"Contato iniciado","Partner Ativo":"Partner ativo","Pausado":"Adormecido"};
+  const legacyStages = {"Primeiro Contato":"Initial Outreach","Partner Ativo":"Active Referral Partner","Pausado":"Dormant"};
   data.forEach(record=>{ if(legacyStages[record.stage]) record.stage = legacyStages[record.stage]; });
   if(filters.partnerClassification!=="All") data=data.filter(r=>(r.partner_classification||"Unclassified")===filters.partnerClassification);
-  if(filters.relationshipLevel!=="All") data=data.filter(r=>(r.relationship_level||"Novo")===filters.relationshipLevel);
-  if(filters.cadence!=="All") data=data.filter(r=>Boolean(r.cadence_active)===(filters.cadence==="Ativa"));
-  if(filters.opportunity!=="All") data=data.filter(r=>partnerHasOpportunity(r)===(filters.opportunity==="Com oportunidade"));
-  if(filters.attention==="Sem próxima ação") data=data.filter(r=>!getNextActionAt(r));
-  if(filters.attention==="Contato vencido") data=data.filter(r=>{const d=getNextActionAt(r);return d && d<new Date();});
-  if(filters.attention==="Adormecidos") data=data.filter(r=>r.stage==="Adormecido");
+  if(filters.relationshipLevel!=="All") data=data.filter(r=>(r.relationship_level||"New")===filters.relationshipLevel);
+  if(filters.cadence!=="All") data=data.filter(r=>Boolean(r.cadence_active)===(filters.cadence==="Active"));
+  if(filters.opportunity!=="All") data=data.filter(r=>partnerHasOpportunity(r)===(filters.opportunity==="With opportunity"));
+  if(filters.attention==="No next action") data=data.filter(r=>!getNextActionAt(r));
+  if(filters.attention==="Overdue contact") data=data.filter(r=>{const d=getNextActionAt(r);return d && d<new Date();});
+  if(filters.attention==="Dormant") data=data.filter(r=>r.stage==="Dormant");
   return data;
 };
 
@@ -453,14 +453,14 @@ renderKPIs = function(scope){
   if(currentTab!=="specifiers"){ $("partnerKpis").hidden=true; return; }
   const now = new Date();
   const metrics = [
-    ["Total no filtro",scope.length],
-    ["Contatos vencidos",scope.filter(r=>{const d=getNextActionAt(r);return d&&d<now;}).length],
-    ["Próximas ações em 7 dias",scope.filter(r=>{const d=getNextActionAt(r);return d&&d>=now&&(d-now)<=7*86400000;}).length],
-    ["Sem próxima ação",scope.filter(r=>!getNextActionAt(r)).length],
-    ["Oportunidades",scope.filter(r=>r.stage==="Oportunidade identificada").length],
-    ["Projetos recebidos",scope.filter(r=>r.stage==="Projeto recebido").length],
-    ["Professional Partners ativos",scope.filter(r=>r.stage==="Partner ativo").length],
-    ["Recorrentes",scope.filter(r=>r.relationship_level==="Recorrente").length]
+    ["Total in view",scope.length],
+    ["Overdue contacts",scope.filter(r=>{const d=getNextActionAt(r);return d&&d<now;}).length],
+    ["Next actions in 7 days",scope.filter(r=>{const d=getNextActionAt(r);return d&&d>=now&&(d-now)<=7*86400000;}).length],
+    ["No next action",scope.filter(r=>!getNextActionAt(r)).length],
+    ["Qualified partners",scope.filter(r=>r.stage==="Qualified Partner").length],
+    ["Active referral partners",scope.filter(r=>r.stage==="Active Referral Partner").length],
+    ["Strategic partners",scope.filter(r=>r.stage==="Strategic Partner").length],
+    ["Recurring relationships",scope.filter(r=>r.relationship_level==="Recurring").length]
   ];
   $("partnerKpis").hidden=false;
   $("partnerKpis").innerHTML=metrics.map(([label,value])=>`<div class="kpi"><div class="n">${value}</div><div class="t">${escapeHtml(label)}</div></div>`).join("");
@@ -472,17 +472,17 @@ renderCard = function(record){
   const next = getNextActionAt(record);
   const days = partnerDaysWithoutContact(record);
   const classification = record.partner_classification || "Unclassified";
-  const level = record.relationship_level || "Novo";
+  const level = record.relationship_level || "New";
   const schedule = scheduleStatus(record);
   const opportunity = partnerHasOpportunity(record);
-  return `<div class="card partnerCard ${stageClass(record.stage||"Mapeado")} grab" draggable="${isMobileLayout()?"false":"true"}" data-id="${escapeHtml(record.id)}">
-    <div class="cTop"><div><div class="cName">${escapeHtml(fullName(record))}</div><div class="partnerCompany">${escapeHtml(record.company_name||"Escritório não informado")}</div></div><div class="rightTop"><span class="badge classificationBadge ${classification.startsWith("A")?"classA":classification.startsWith("B")?"classB":classification.startsWith("C")?"classC":""}">${escapeHtml(classification)}</span><button class="dots" type="button" data-menu-btn="${escapeHtml(record.id)}">...</button></div></div>
+  return `<div class="card partnerCard ${stageClass(record.stage||"Identified")} grab" draggable="${isMobileLayout()?"false":"true"}" data-id="${escapeHtml(record.id)}">
+    <div class="cTop"><div><div class="cName">${escapeHtml(fullName(record))}</div><div class="partnerCompany">${escapeHtml(record.company_name||"Company not provided")}</div></div><div class="rightTop"><span class="badge classificationBadge ${classification.startsWith("A")?"classA":classification.startsWith("B")?"classB":classification.startsWith("C")?"classC":""}">${escapeHtml(classification)}</span><button class="dots" type="button" data-menu-btn="${escapeHtml(record.id)}">...</button></div></div>
     <div class="row"><span class="chip">${escapeHtml(record.specifier_type||"Partner")}</span><span class="chip muted">${escapeHtml(record.city||"City —")}</span><span class="chip muted">${escapeHtml(profileNameById(record.owner_id))}</span></div>
-    <div class="partnerStatusRow"><span>${escapeHtml(level)}</span><span>${days===null?"Sem contato registrado":`${days} dia(s) sem contato`}</span></div>
-    <div class="meta">Último contato: <b>${escapeHtml(fmtBRDate(record.last_contact_at))}</b>${next?` • Próxima: <b>${escapeHtml(fmtBRDateTime(next.toISOString()))}</b>`:""}</div>
-    <div class="partnerSignals">${record.cadence_active?`<span title="Cadência ativa">Cadência ativa</span>`:""}${opportunity?`<span title="Oportunidade">${record.stage==="Projeto recebido"?"Projeto recebido":"Oportunidade"}</span>`:""}${!next?`<span class="signalWarn">Sem próxima ação</span>`:""}${days>14?`<span class="signalWarn">+14 dias sem contato</span>`:""}</div>
+    <div class="partnerStatusRow"><span>${escapeHtml(level)}</span><span>${days===null?"No contact logged":`${days} day(s) since contact`}</span></div>
+    <div class="meta">Last contact: <b>${escapeHtml(fmtBRDate(record.last_contact_at))}</b>${next?` • Next: <b>${escapeHtml(fmtBRDateTime(next.toISOString()))}</b>`:""}</div>
+    <div class="partnerSignals">${record.cadence_active?`<span title="Active cadence">Active cadence</span>`:""}${opportunity?`<span title="Opportunity">${record.stage==="Active Referral Partner"?"Active referral":"Opportunity"}</span>`:""}${!next?`<span class="signalWarn">No next action</span>`:""}${days>14?`<span class="signalWarn">14+ days without contact</span>`:""}</div>
     <div class="scheduleState ${schedule.kind}">${escapeHtml(schedule.label)}</div>
-    <div class="menu" data-menu="${escapeHtml(record.id)}"><button type="button" data-act="edit" data-id="${escapeHtml(record.id)}">Abrir parceiro</button><button type="button" data-act="logContact" data-id="${escapeHtml(record.id)}">Log activity</button><button type="button" data-act="schedule" data-id="${escapeHtml(record.id)}">Criar compromisso</button></div>
+    <div class="menu" data-menu="${escapeHtml(record.id)}"><button type="button" data-act="edit" data-id="${escapeHtml(record.id)}">Open partner</button><button type="button" data-act="logContact" data-id="${escapeHtml(record.id)}">Log activity</button><button type="button" data-act="schedule" data-id="${escapeHtml(record.id)}">Create appointment</button></div>
   </div>`;
 };
 
@@ -497,26 +497,26 @@ setTab = function(tab){
   if($("partnerExtraFilters")) $("partnerExtraFilters").hidden = tab!=="specifiers";
   if(tab==="specifiers"){
     $("btnNew").textContent = "+ New partner";
-    $("boardHint").innerHTML = `<div>Nenhum parceiro em relacionamento deve ficar sem uma próxima ação agendada.</div><div></div>`;
+    $("boardHint").innerHTML = `<div>Every active partner relationship should have a scheduled next action.</div><div></div>`;
   }
 };
 
 const baseMoveRecordToStage = moveRecordToStage;
 moveRecordToStage = async function(id, stage){
   const record = records.find(item=>item.id===id);
-  if(!record || !isSpecifier(record) || stage!=="Visitou a loja" || record.cadence_active) return baseMoveRecordToStage(id, stage);
-  const activate = confirm("Ativar a cadência inicial de relacionamento de 90 dias?\n\nOK: ativar • Cancel: mover sem ativar");
+  if(!record || !isSpecifier(record) || stage!=="Intro Meeting" || record.cadence_active) return baseMoveRecordToStage(id, stage);
+  const activate = confirm("Activate the initial 90-day relationship cadence?\n\nOK: activate • Cancel: move without activating");
   if(!activate) return baseMoveRecordToStage(id, stage);
   const baseDate = nowISO();
   const appointments = [...normalizeAppointments(record), ...partnerCreateInitialCadence(record, baseDate, record.partner_classification || "Unclassified", record.owner_id)];
   const active = appointments.filter(item=>item.status==="scheduled").sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const first = active[0] || null;
-  const patch = {stage,stage_entered_at:nowISO(),first_visit_at:record.first_visit_at||baseDate,cadence_active:true,cadence_type:"Inicial 90 dias",cadence_started_at:baseDate,cadence_cycle:1,appointments,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,cadence_history:[...(record.cadence_history||[]),{at:nowISO(),action:"activated",type:"Inicial 90 dias",actor_id:session.user.id}]};
+  const patch = {stage,stage_entered_at:nowISO(),first_visit_at:record.first_visit_at||baseDate,cadence_active:true,cadence_type:"Initial 90 Days",cadence_started_at:baseDate,cadence_cycle:1,appointments,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,cadence_history:[...(record.cadence_history||[]),{at:nowISO(),action:"activated",type:"Initial 90 Days",actor_id:session.user.id}]};
   const {error}=await sb.from(TBL_RECORDS).update(patch).eq("id",id);
-  if(error){console.error(error);return toast("No foi possível ativar a cadência. Aplique a nova migração.");}
-  await fetchRecords({reason:"cadência inicial",notifyNew:false});
+  if(error){console.error(error);return toast("Could not activate the cadence. Apply the current database migration.");}
+  await fetchRecords({reason:"initial cadence",notifyNew:false});
   render();
-  toast("Visita registrada e cadência de 90 dias ativada.");
+  toast("Meeting logged and the 90-day cadence activated.");
 };
 
 const baseRegisterContactNow = registerContactNow;
@@ -530,17 +530,17 @@ registerContactNow = async function(record){
   $("contactOwner").innerHTML = partnerOwnerOption(record.owner_id || session.user.id);
   $("contactChannel").value = "Email";
   $("contactType").value = ""; $("contactObjective").value = ""; $("contactSummary").value = ""; $("contactProject").value = "";
-  $("contactResult").value = "Conversa realizada";
+  $("contactResult").value = "Conversation Completed";
   $("contactNextAction").value = ""; $("contactNextAt").value = "";
   $("contactNextOwner").innerHTML = partnerOwnerOption(record.next_action_owner || record.owner_id || session.user.id);
   const scheduled = scheduledAppointments(record);
-  $("relatedAppointment").innerHTML = `<option value="">Nenhum</option>` + scheduled.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.kind)} • ${escapeHtml(fmtBRDateTime(item.starts_at))}</option>`).join("");
+  $("relatedAppointment").innerHTML = `<option value="">None</option>` + scheduled.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.kind)} • ${escapeHtml(fmtBRDateTime(item.starts_at))}</option>`).join("");
   const sent = new Set((record.sent_contents||[]).map(item=>item.content_id));
-  const options = partnerContents.filter(item=>item.status==="Ativo");
-  $("contactContent").innerHTML = `<option value="">Nenhum</option>` + options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join("");
+  const options = partnerContents.filter(item=>item.status==="Active");
+  $("contactContent").innerHTML = `<option value="">None</option>` + options.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)}</option>`).join("");
   const tags = new Set(record.interest_tags || []);
   const suggestions = options.filter(item=>!sent.has(item.id) && (item.tags||[]).some(tag=>tags.has(tag))).slice(0,4);
-  $("contentSuggestions").textContent = suggestions.length ? `Sugestões ainda não enviadas: ${suggestions.map(item=>item.title).join(" • ")}` : "Nenhuma sugestão inédita pelas tags atuais.";
+  $("contentSuggestions").textContent = suggestions.length ? `Suggested unsent content: ${suggestions.map(item=>item.title).join(" • ")}` : "No new suggestions for the selected interests.";
   $("contactModal").showModal();
 };
 
@@ -548,14 +548,14 @@ async function partnerSaveContact(){
   const record = records.find(item=>item.id===$("contactModal").dataset.recordId);
   if(!record) return;
   const summary = $("contactSummary").value.trim();
-  if(!summary) return toast("Resuma o que aconteceu.");
+  if(!summary) return toast("Enter an activity summary.");
   const at = new Date($("contactAt").value).toISOString();
   const result = $("contactResult").value;
   let appointments = normalizeAppointments(record);
   const relatedId = $("relatedAppointment").value;
   if(relatedId) appointments = appointments.map(item=>item.id===relatedId?{...item,status:"completed",completed_at:at,completed_by:session.user.id}:item);
   if($("contactNextAt").value){
-    appointments.push(partnerNormalizeAppointment({id:crypto.randomUUID(),starts_at:new Date($("contactNextAt").value).toISOString(),kind:$("contactNextAction").value.trim()||"Follow-Up",details:`Criado após contato: ${summary}`,owner_id:$("contactNextOwner").value||record.owner_id,status:"scheduled",source:"contact_log"}));
+    appointments.push(partnerNormalizeAppointment({id:crypto.randomUUID(),starts_at:new Date($("contactNextAt").value).toISOString(),kind:$("contactNextAction").value.trim()||"Follow-Up",details:`Created after activity: ${summary}`,owner_id:$("contactNextOwner").value||record.owner_id,status:"scheduled",source:"contact_log"}));
   }else if(relatedId && record.cadence_active && PERMANENT_CADENCES[record.cadence_type]){
     const next = partnerNextPermanentAppointment(record, at);
     if(next) appointments.push(next);
@@ -568,13 +568,13 @@ async function partnerSaveContact(){
     if(decision.decision==="create"){ $("contactNextAt").focus(); return; }
     reason = decision.reason;
   }
-  const interaction = {id:crypto.randomUUID(),at,owner_id:$("contactOwner").value,channel:$("contactChannel").value,type:$("contactType").value.trim()||"Contato",objective:$("contactObjective").value.trim()||null,summary,result,project:$("contactProject").value.trim()||null,content_id:$("contactContent").value||null,next_action:$("contactNextAction").value.trim()||null,next_action_at:$("contactNextAt").value?new Date($("contactNextAt").value).toISOString():null};
+  const interaction = {id:crypto.randomUUID(),at,owner_id:$("contactOwner").value,channel:$("contactChannel").value,type:$("contactType").value.trim()||"Activity",objective:$("contactObjective").value.trim()||null,summary,result,project:$("contactProject").value.trim()||null,content_id:$("contactContent").value||null,next_action:$("contactNextAction").value.trim()||null,next_action_at:$("contactNextAt").value?new Date($("contactNextAt").value).toISOString():null};
   const selectedContent = partnerContents.find(item=>item.id===$("contactContent").value);
   const sentContents = [...(record.sent_contents||[])];
   if(selectedContent) sentContents.push({id:crypto.randomUUID(),content_id:selectedContent.id,title:selectedContent.title,sent_at:at,responsible_id:$("contactOwner").value,channel:$("contactChannel").value,notes:summary});
-  const stageSuggestion = {"Visita agendada":"Visita agendada","Oportunidade identificada":"Oportunidade identificada","Projeto recebido":"Projeto recebido"}[result];
+  const stageSuggestion = {"Meeting Scheduled":"Intro Meeting","Opportunity Identified":"Qualified Partner","Project Referred":"Active Referral Partner"}[result];
   let stage = record.stage;
-  if(stageSuggestion && stageSuggestion!==stage && confirm(`O resultado sugere mover o parceiro para “${stageSuggestion}”. Deseja alterar a etapa?`)) stage=stageSuggestion;
+  if(stageSuggestion && stageSuggestion!==stage && confirm(`This result suggests moving the partner to “${stageSuggestion}.” Change the stage?`)) stage=stageSuggestion;
   const first = scheduled.find(item=>new Date(item.starts_at)>=new Date()) || scheduled[0] || null;
   const payload = {interactions:[...(record.interactions||[]),interaction],sent_contents:sentContents,last_contact_at:at,appointments,stage,stage_entered_at:stage!==record.stage?nowISO():record.stage_entered_at,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,next_action_owner:first?.owner_id||record.owner_id,no_next_action_reason:first?null:reason,owner_id:$("contactOwner").value||record.owner_id};
   if(relatedId && PERMANENT_CADENCES[record.cadence_type]) payload.cadence_cycle=Number(record.cadence_cycle||0)+1;
@@ -585,13 +585,13 @@ async function partnerSaveContact(){
   $("contactModal").close();
   if($("modal").open) closeModal();
   render();
-  toast("Activity logged e acompanhamento atualizado.");
+  toast("Activity logged and follow-up updated.");
 }
 
 async function partnerFetchContents(){
   if(!sb || !session?.user) return [];
   const {data,error}=await sb.from(TBL_PARTNER_CONTENTS).select("*").order("registered_at",{ascending:false});
-  if(error){ console.warn("[CRM Professional Partners] Banco de conteúdos indisponível.", error); partnerContents=[]; return []; }
+  if(error){ console.warn("[CRM Professional Partners] Content library unavailable.", error); partnerContents=[]; return []; }
   partnerContents=data||[];
   return partnerContents;
 }
@@ -600,23 +600,23 @@ async function partnerOpenContentBank(){
   partnerClearContentForm(); partnerRenderContents(); $("contentBankModal").showModal();
 }
 function partnerClearContentForm(){
-  $("contentId").value=""; $("contentTitle").value=""; $("contentDescription").value=""; $("contentUrl").value=""; $("contentTags").value=""; $("contentNotes").value=""; $("contentStatus").value="Ativo"; $("contentPillar").value=CONTENT_PILLARS[0]; $("contentFormat").value=CONTENT_FORMATS[0];
+  $("contentId").value=""; $("contentTitle").value=""; $("contentDescription").value=""; $("contentUrl").value=""; $("contentTags").value=""; $("contentNotes").value=""; $("contentStatus").value="Active"; $("contentPillar").value=CONTENT_PILLARS[0]; $("contentFormat").value=CONTENT_FORMATS[0];
 }
 function partnerRenderContents(){
   const query=($("contentSearch").value||"").toLowerCase(); const status=$("contentStatusFilter").value;
   const data=partnerContents.filter(item=>(status==="All"||item.status===status)&&[item.title,item.description,...(item.tags||[])].join(" ").toLowerCase().includes(query));
-  $("contentList").innerHTML=data.length?data.map(item=>`<article class="contentCard"><div><b>${escapeHtml(item.title)}</b><span>${escapeHtml(item.pillar)} • ${escapeHtml(item.format)} • ${escapeHtml(item.status)}</span></div>${item.description?`<p>${escapeHtml(item.description)}</p>`:""}<div class="row">${(item.tags||[]).map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div><div class="contentCardActions">${item.external_url?`<a class="btn" href="${escapeHtml(item.external_url)}" target="_blank" rel="noopener noreferrer">Abrir link</a>`:""}<button class="ghost" type="button" data-content-edit="${escapeHtml(item.id)}">Edit</button></div></article>`).join(""):`<div class="empty">Nenhum conteúdo neste filtro. Aplique a migração se o banco ainda não estiver disponível.</div>`;
+  $("contentList").innerHTML=data.length?data.map(item=>`<article class="contentCard"><div><b>${escapeHtml(item.title)}</b><span>${escapeHtml(item.pillar)} • ${escapeHtml(item.format)} • ${escapeHtml(item.status)}</span></div>${item.description?`<p>${escapeHtml(item.description)}</p>`:""}<div class="row">${(item.tags||[]).map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div><div class="contentCardActions">${item.external_url?`<a class="btn" href="${escapeHtml(item.external_url)}" target="_blank" rel="noopener noreferrer">Open link</a>`:""}<button class="ghost" type="button" data-content-edit="${escapeHtml(item.id)}">Edit</button></div></article>`).join(""):`<div class="empty">No content matches this filter. Apply the current database migration if the library is unavailable.</div>`;
 }
 function partnerEditContent(id){
   const item=partnerContents.find(content=>content.id===id); if(!item)return;
   $("contentId").value=item.id; $("contentTitle").value=item.title||""; $("contentPillar").value=item.pillar; $("contentFormat").value=item.format; $("contentDescription").value=item.description||""; $("contentUrl").value=item.external_url||""; $("contentTags").value=(item.tags||[]).join(", "); $("contentStatus").value=item.status; $("contentNotes").value=item.notes||"";
 }
 async function partnerSaveContent(){
-  const title=$("contentTitle").value.trim(); if(!title)return toast("Informe o título do conteúdo.");
+  const title=$("contentTitle").value.trim(); if(!title)return toast("Enter a content title.");
   const payload={title,pillar:$("contentPillar").value,format:$("contentFormat").value,description:$("contentDescription").value.trim()||null,external_url:$("contentUrl").value.trim()||null,tags:partnerCsv($("contentTags").value),status:$("contentStatus").value,notes:$("contentNotes").value.trim()||null,created_by:session.user.id};
   const id=$("contentId").value; const query=id?sb.from(TBL_PARTNER_CONTENTS).update(payload).eq("id",id):sb.from(TBL_PARTNER_CONTENTS).insert(payload);
-  const {error}=await query; if(error){console.error(error);return toast("Erro ao salvar conteúdo. Verifique a migração.");}
-  await partnerFetchContents(); partnerClearContentForm(); partnerRenderContents(); toast("Conteúdo salvo.");
+  const {error}=await query; if(error){console.error(error);return toast("Could not save content. Verify the current database migration.");}
+  await partnerFetchContents(); partnerClearContentForm(); partnerRenderContents(); toast("Content saved.");
 }
 
 const baseRenderReports = renderReports;
@@ -630,10 +630,10 @@ renderReports = function(){
   const countBy = (values,key)=>Object.entries(values.reduce((acc,item)=>{const label=key(item)||"Not provided";acc[label]=(acc[label]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]);
   const stageRows=countBy(partners,r=>r.stage).map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("");
   const classRows=countBy(partners,r=>r.partner_classification||"Unclassified").map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("");
-  const contentRows=countBy(sent,item=>item.title).slice(0,8).map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("")||`<div class="empty">Nenhum envio registrado.</div>`;
-  const channelRows=countBy(interactions,item=>item.channel).map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("")||`<div class="empty">Nenhum contato detalhado registrado.</div>`;
-  const metrics=[["Professional Partners cadastrados",partners.length],["Sem próxima ação",partners.filter(r=>!getNextActionAt(r)).length],["Ações programadas",scheduled.filter(i=>i.status==="scheduled").length],["Ações concluídas",completed.length],["Taxa de cumprimento",scheduled.length?`${Math.round(completed.length/scheduled.length*100)}%`:"—"],["+14 dias sem contato",partners.filter(r=>partnerDaysWithoutContact(r)>14).length],["+30 dias sem contato",partners.filter(r=>partnerDaysWithoutContact(r)>30).length],["+60 dias sem contato",partners.filter(r=>partnerDaysWithoutContact(r)>60).length],["Oportunidades",partners.filter(r=>r.stage==="Oportunidade identificada").length],["Projetos recebidos",partners.filter(r=>r.stage==="Projeto recebido").length],["Professional Partners ativos",partners.filter(r=>r.stage==="Partner ativo").length],["Recorrentes",partners.filter(r=>r.relationship_level==="Recorrente").length]];
-  return `${base}<section class="partnerReports"><div class="sectionHd"><span>Relacionamento com parceiros</span><span>Dados calculados do CRM</span></div><div class="summaryGrid">${metrics.map(([label,value])=>`<div class="summaryCard"><div class="t">${escapeHtml(label)}</div><div class="n">${value}</div></div>`).join("")}</div><div class="partnerReportColumns"><section class="sectionCard"><div class="sectionHd"><span>Por etapa</span></div><div class="sectionBody">${stageRows||`<div class="empty">Sem parceiros.</div>`}</div></section><section class="sectionCard"><div class="sectionHd"><span>Por classificação</span></div><div class="sectionBody">${classRows||`<div class="empty">Sem parceiros.</div>`}</div></section><section class="sectionCard"><div class="sectionHd"><span>Conteúdos mais utilizados</span></div><div class="sectionBody">${contentRows}</div></section><section class="sectionCard"><div class="sectionHd"><span>Canais utilizados</span></div><div class="sectionBody">${channelRows}</div></section></div></section>`;
+  const contentRows=countBy(sent,item=>item.title).slice(0,8).map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("")||`<div class="empty">No content activity logged.</div>`;
+  const channelRows=countBy(interactions,item=>item.channel).map(([label,value])=>`<div class="reportRow"><span>${escapeHtml(label)}</span><b>${value}</b></div>`).join("")||`<div class="empty">No detailed activity logged.</div>`;
+  const metrics=[["Professional partners",partners.length],["No next action",partners.filter(r=>!getNextActionAt(r)).length],["Scheduled actions",scheduled.filter(i=>i.status==="scheduled").length],["Completed actions",completed.length],["Completion rate",scheduled.length?`${Math.round(completed.length/scheduled.length*100)}%`:"—"],["14+ days without contact",partners.filter(r=>partnerDaysWithoutContact(r)>14).length],["30+ days without contact",partners.filter(r=>partnerDaysWithoutContact(r)>30).length],["60+ days without contact",partners.filter(r=>partnerDaysWithoutContact(r)>60).length],["Qualified partners",partners.filter(r=>r.stage==="Qualified Partner").length],["Active referral partners",partners.filter(r=>r.stage==="Active Referral Partner").length],["Strategic partners",partners.filter(r=>r.stage==="Strategic Partner").length],["Recurring relationships",partners.filter(r=>r.relationship_level==="Recurring").length]];
+  return `${base}<section class="partnerReports"><div class="sectionHd"><span>Partner relationships</span><span>CRM-calculated data</span></div><div class="summaryGrid">${metrics.map(([label,value])=>`<div class="summaryCard"><div class="t">${escapeHtml(label)}</div><div class="n">${value}</div></div>`).join("")}</div><div class="partnerReportColumns"><section class="sectionCard"><div class="sectionHd"><span>By stage</span></div><div class="sectionBody">${stageRows||`<div class="empty">No partners.</div>`}</div></section><section class="sectionCard"><div class="sectionHd"><span>By classification</span></div><div class="sectionBody">${classRows||`<div class="empty">No partners.</div>`}</div></section><section class="sectionCard"><div class="sectionHd"><span>Most-used content</span></div><div class="sectionBody">${contentRows}</div></section><section class="sectionCard"><div class="sectionHd"><span>Channels used</span></div><div class="sectionBody">${channelRows}</div></section></div></section>`;
 };
 
 window.MarelPartners = Object.freeze({

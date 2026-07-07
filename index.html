@@ -443,7 +443,7 @@
     <div class="logo" aria-label="Marel Houston"><img src="assets/marel/logo-reversed.png" alt="Marel Design Mobili" /></div>
     <div>
       <h1>Marel Houston CRM</h1>
-      <div class="sub" id="sessionLine">Offline (template). Conecte ao Supabase para login e sincronização.</div>
+      <div class="sub" id="sessionLine">Safe offline template. Configure an independent Marel Supabase project to enable sign-in and sync.</div>
       <div class="syncStatus offline" id="syncStatus" role="status" aria-live="polite">Offline</div>
     </div>
   </div>
@@ -496,7 +496,7 @@
 
     <div class="field" id="wrapLostFilter" style="min-width:170px;">
       <label>Lost</label>
-      <button class="ghost" id="btnToggleLost" type="button">Ocultar Lost</button>
+      <button class="ghost" id="btnToggleLost" type="button">Hide Lost</button>
     </div>
 
 
@@ -528,27 +528,27 @@
     <div class="modalHd">
       <div>
         <div class="modalTitle">Sign in</div>
-        <div class="modalSub">Use o e-mail e senha criados no Supabase (Auth).</div>
+        <div class="modalSub">Use the email and password created in Supabase Auth.</div>
       </div>
-      <button class="ghost" id="btnCloseLogin" hidden>Fechar</button>
+      <button class="ghost" id="btnCloseLogin" hidden>Close</button>
     </div>
     <div class="modalBd">
       <div class="loginGrid">
         <div>
           <label>Email</label>
-          <input id="loginEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ex.: conrado@empresa.com" />
+          <input id="loginEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="name@company.com" />
         </div>
         <div>
           <label>Password</label>
           <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
         <div class="note" id="loginNote">
-          Se o login falhar, verifique se o usuário foi criado no painel do Supabase e se o projeto está ativo.
+          If sign-in fails, confirm that the user exists in Supabase Auth and that the Marel project is active.
         </div>
       </div>
     </div>
     <div class="modalFt">
-      <div class="note">Dica: para equipe interna, desabilite “signups” e crie os usuários manualmente no Supabase.</div>
+      <div class="note">For an internal team, disable public sign-ups and create approved users manually in Supabase.</div>
       <div class="loginActions">
         <button class="primary" id="btnLogin">Sign in</button>
       </div>
@@ -559,14 +559,14 @@
   <dialog id="modal">
     <div class="modalHd">
       <div class="modalCustomerIdentity">
-        <img id="modalCustomerAvatar" class="modalCustomerAvatar" alt="Foto do cliente" hidden />
+        <img id="modalCustomerAvatar" class="modalCustomerAvatar" alt="Customer profile" hidden />
         <div>
-          <div class="modalTitle" id="modalTitle">Detalhes</div>
-          <div class="modalSub" id="modalRequirement">Obrigatório: First name, Last name, Phone, City, Room / Space.</div>
+          <div class="modalTitle" id="modalTitle">Details</div>
+          <div class="modalSub" id="modalRequirement">Required: First name, last name, phone, city, and room / space.</div>
         </div>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-left:auto">
-        <button class="ghost" id="btnCloseModal">Fechar</button>
+        <button class="ghost" id="btnCloseModal">Close</button>
       </div>
     </div>
 
@@ -652,9 +652,9 @@
             <option value="15">15 minutes</option>
             <option value="30" selected>30 minutes</option>
             <option value="45">45 minutes</option>
-            <option value="60">1 hora</option>
-            <option value="90">1h30</option>
-            <option value="120">2 horas</option>
+            <option value="60">1 hour</option>
+            <option value="90">1 hour 30 minutes</option>
+            <option value="120">2 hours</option>
           </select>
         </div>
 
@@ -662,8 +662,8 @@
           <label>Calendar reminder</label>
           <select id="nextActionReminder">
             <option value="0">No reminder</option>
-            <option value="15">15 minutes antes</option>
-            <option value="30" selected>30 minutes antes</option>
+            <option value="15">15 minutes before</option>
+            <option value="30" selected>30 minutes before</option>
             <option value="60">1 hour before</option>
             <option value="120">2 hours before</option>
             <option value="1440">1 day before</option>
@@ -672,7 +672,7 @@
 
         <div class="col-12">
           <label>Appointment details</label>
-          <textarea id="nextActionDetails" placeholder="Ex.: confirmar recebimento da planta, revisar briefing e combinar data da apresentação."></textarea>
+          <textarea id="nextActionDetails" placeholder="Example: confirm receipt of plans, review the brief, and schedule the presentation."></textarea>
         </div>
 
         <div class="col-12" style="display:flex;justify-content:flex-end">
@@ -697,11 +697,11 @@
         <div class="col-6" id="wrapSpecifierType" style="display:none;">
           <label>Partner type</label>
           <select id="specifierType">
-            <option>Arquiteto</option>
-            <option>Designer de interiores</option>
-            <option>Corretor</option>
-            <option>Construtor</option>
-            <option>Other parceiro</option>
+            <option>Architect</option>
+            <option>Interior Designer</option>
+            <option>Realtor</option>
+            <option>Builder</option>
+            <option>Other</option>
           </select>
         </div>
         <div class="col-6" id="wrapCompanyName" style="display:none;">
@@ -718,7 +718,7 @@
           <input id="estimate" type="number" min="0" step="100" placeholder="optional" />
         </div>
         <div class="col-3" id="wrapLostReason" style="display:none;">
-          <label>Motivo (Lost)</label>
+          <label>Lost reason</label>
           <select id="lostReason"></select>
         </div>
 
@@ -780,7 +780,7 @@
     </div>
 
     <div class="modalFt">
-      <div class="note" id="modalFootNote">Atalhos: Won / Lost / Delete.</div>
+      <div class="note" id="modalFootNote">Shortcuts: won, lost, or delete.</div>
 
       <div class="modalQuick">
         <button class="ghost" id="btnCancel">Cancel</button>
@@ -801,7 +801,7 @@
         <div class="modalTitle" id="pendingModalTitle">New service item</div>
         <div class="modalSub">Service, inspections, parts, and purchases outside the sales pipeline.</div>
       </div>
-      <button class="ghost" id="btnClosePending">Fechar</button>
+      <button class="ghost" id="btnClosePending">Close</button>
     </div>
     <div class="modalBd">
       <form class="form" id="pendingForm" autocomplete="off">
@@ -898,15 +898,11 @@
 <script src="js/config-loader.js"></script>
 
 <script>
-/*
-  ====== CONFIGURE AQUI ======
-  1) Crie um projeto no Supabase
-  2) Pegue URL e ANON KEY em: Project Settings > API
-*/
+/* Configure an independent Marel Supabase project through config/runtime-config.js. */
 const SUPABASE_URL = window.APP_CONFIG?.runtime?.supabaseUrl || "";
 const SUPABASE_ANON_KEY = window.APP_CONFIG?.runtime?.supabasePublishableKey || "";
 
-/* ===== Funis ===== */
+/* ===== Pipelines ===== */
 const LEAD_STAGES = window.APP_CONFIG.pipelines.sales.slice();
 const CLOSED_STAGES = window.APP_CONFIG.pipelines.delivery.slice();
 const SPECIFIER_STAGES = window.APP_CONFIG.pipelines.partners.slice();
@@ -922,7 +918,7 @@ const STAGE_PHASES = {
 const DEFAULT_SOURCES = window.APP_CONFIG.leads.sources.slice();
 const DEFAULT_LOST_REASONS = ["Price","Due date","Competitor","No response","Changed plans","Budget not available","Other"];
 
-/* ===== DB tables (SQL no guia) ===== */
+/* ===== Database tables ===== */
 const TBL_RECORDS = "crm_records";
 const TBL_PROFILES = "crm_profiles";
 const TBL_CONFIG = "crm_config"; // id=1, sources jsonb, lost_reasons jsonb
@@ -1022,12 +1018,12 @@ function scheduleStatus(r){
   const diffHours = (next.getTime() - Date.now()) / 3600000;
   const nextAppointment = scheduledAppointments(r).find(item=>new Date(item.starts_at).getTime()===next.getTime());
   const action = nextAppointment?.kind || r.next_action_kind || "Follow-Up";
-  if(diffHours < 0) return {kind:"late", label:`${action} atrasado • ${fmtBRDateTime(next.toISOString())}`};
+  if(diffHours < 0) return {kind:"late", label:`${action} overdue • ${fmtBRDateTime(next.toISOString())}`};
   if(diffHours <= 168) return {kind:"ok", label:`${action} • ${fmtBRDateTime(next.toISOString())}`};
-  return {kind:"ok", label:`${action} agendado • ${fmtBRDateTime(next.toISOString())}`};
+  return {kind:"ok", label:`${action} scheduled • ${fmtBRDateTime(next.toISOString())}`};
 }
 async function callOutlook(action, payload={}){
-  if(!sb || !session?.access_token) throw new Error("Entre no CRM novamente.");
+  if(!sb || !session?.access_token) throw new Error("Sign in to the CRM again.");
   const response = await fetch(`${SUPABASE_URL}/functions/v1/outlook-calendar`, {
     method:"POST",
     headers:{
@@ -1098,7 +1094,7 @@ try{
 function updateSoundBtn(){
   const b = document.getElementById("btnSound");
   if(!b) return;
-  b.textContent = `Som: ${soundEnabled ? "ON" : "OFF"}`;
+  b.textContent = `Sound: ${soundEnabled ? "ON" : "OFF"}`;
 }
 
 function unlockAudio(){
@@ -1110,7 +1106,7 @@ function unlockAudio(){
 
 function beep(){
   if(!soundEnabled) return;
-  if(!audioUnlocked) return; // navegador exige 1 clique do usuário antes
+  if(!audioUnlocked) return; // Browsers require a user interaction before audio playback.
   try{
     const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     audioCtx = ctx;
@@ -1136,7 +1132,7 @@ function rememberNotifiedRecord(id){
   localStorage.setItem(NOTIFIED_IDS_KEY, JSON.stringify(ids));
 }
 
-function notifyOnlineLeadOnce(record, origin="sincronização"){
+function notifyOnlineLeadOnce(record, origin="sync"){
   if(!hasInitialRecordSnapshot || !record?.id) return false;
   if(record.pipeline !== "lead" || (record.source || "") !== "Lead Online") return false;
   if(notifiedRecordIds.has(record.id)) return false;
@@ -1152,9 +1148,9 @@ function notifyOnlineLeadOnce(record, origin="sincronização"){
 document.getElementById("btnSound")?.addEventListener("click", ()=>{
   soundEnabled = !soundEnabled;
   localStorage.setItem("crm_sound_enabled", soundEnabled ? "1" : "0");
-  unlockAudio(); // 1º clique libera áudio
+  unlockAudio();
   updateSoundBtn();
-  toast(soundEnabled ? "Som ativado." : "Som off.");
+  toast(soundEnabled ? "Sound on." : "Sound off.");
 });
 
 updateSoundBtn();
@@ -1218,8 +1214,8 @@ let appointmentDrafts = [];
 let config = { sources: DEFAULT_SOURCES.slice(), lost_reasons: DEFAULT_LOST_REASONS.slice() };
 let profiles = [];   // [{id, display_name}]
 let records = [];    // crm_records rows
-let recordEvents = []; // histórico de movimentações e contatos
-let partnerContents = []; // banco de conteúdos para parceiros
+let recordEvents = []; // Stage, follow-up, and activity history.
+let partnerContents = []; // Content library for partner relationships.
 let eventsSupported = true;
 let weeklyReports = [];
 let weeklyReportsSupported = true;
@@ -1259,7 +1255,7 @@ function updateAppStateBanner(){
   $("btnRetryLoad").hidden = appDataState !== "error";
 }
 function statePanelHtml(){
-  const title = appDataState === "auth" ? "Entre para ver os dados" : appDataTitle;
+  const title = appDataState === "auth" ? "Sign in to view data" : appDataTitle;
   const message = appDataState === "auth"
     ? "Leads, projects, and service items appear after sign-in."
     : appDataMessage;
@@ -1292,23 +1288,23 @@ function setSyncConnectionState(state){
 }
 
 /* ===== Auth + Init ===== */
-function isSettingsured(){
+function isConfigured(){
   return SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20;
 }
 function updateSessionLine(){
   const el = $("sessionLine");
-  if(!isSettingsured()){
-    el.textContent = "Safe offline template. Settingsure the independent Marel Supabase project to enable sign-in and sync.";
+  if(!isConfigured()){
+    el.textContent = "Safe offline template. Configure an independent Marel Supabase project to enable sign-in and sync.";
     return;
   }
   if(!session?.user){
     el.textContent = "Signed out. Select Sign in or reload to authenticate.";
     return;
   }
-  el.textContent = `Conectado: ${session.user.email}`;
+  el.textContent = `Connected: ${session.user.email}`;
 }
 async function initSupabase(){
-  if(!isSettingsured()) return;
+  if(!isConfigured()) return;
   setAppDataState("loading", "Loading your data", "Connecting to the independent Marel workspace…");
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { data, error } = await sb.auth.getSession();
@@ -1320,7 +1316,7 @@ async function initSupabase(){
   updateSessionLine();
 
   sb.auth.onAuthStateChange((event, newSession) => {
-    // Evita chamadas assíncronas dentro do callback interno do cliente Supabase.
+    // Keep asynchronous work outside Supabase's internal auth callback.
     setTimeout(() => handleAuthStateChange(event, newSession), 0);
   });
 
@@ -1337,7 +1333,7 @@ async function handleAuthStateChange(event, newSession){
   const previousUserId = session?.user?.id || null;
   session = newSession;
   updateSessionLine();
-  console.info("[CRM Auth] Estado alterado.", { event, authenticated: Boolean(session?.user) });
+  console.info("[CRM Auth] State changed.", { event, authenticated: Boolean(session?.user) });
 
   if(!session?.user){
     bootedUserId = null;
@@ -1355,7 +1351,7 @@ async function handleAuthStateChange(event, newSession){
   }
 
   if(event === "TOKEN_REFRESHED"){
-    await syncController.resume("token atualizado");
+    await syncController.resume("token refreshed");
   }else if(event === "SIGNED_IN"){
     await syncController.resume("session confirmed");
   }
@@ -1372,7 +1368,7 @@ function lockApp(){
   hasInitialRecordSnapshot = false;
   hasInitialWeeklySnapshot = false;
   setSyncConnectionState("offline");
-  setAppDataState("auth", "Sign-in required", "Entre novamente para carregar os dados compartilhados do CRM.");
+  setAppDataState("auth", "Sign-in required", "Sign in again to load the shared Marel CRM workspace.");
   render();
 }
 function openLogin(){
@@ -1390,7 +1386,7 @@ async function doLogin(){
   if(!email || !password) return toast("Enter email and password.");
   const button = $("btnLogin");
   button.disabled = true;
-  button.textContent = "Entrando…";
+  button.textContent = "Signing in…";
   setAppDataState("loading", "Loading your data", "Signed in. Loading leads, projects, and service items…");
   render();
   try{
@@ -1415,7 +1411,7 @@ async function doSignOut(){
   if(!sb) return;
   await syncController.stop();
   await sb.auth.signOut();
-  toast("Saiu.");
+  toast("Signed out.");
 }
 
 /* ===== Data bootstrap ===== */
@@ -1501,7 +1497,7 @@ async function fetchWeeklyReports(){
   weeklyReports = data || [];
   const latestId = weeklyReports[0]?.id || null;
   if(hasInitialWeeklySnapshot && latestId && latestId !== previousLatestId){
-    toast("Novo resumo semanal disponível em Reports.");
+    toast("A new weekly summary is available in Reports.");
   }
   hasInitialWeeklySnapshot = true;
   return true;
@@ -1534,7 +1530,7 @@ function recordsStateVersion(items){
     .join("|");
 }
 
-async function fetchRecords({ reason="sincronização", notifyNew=true, showError=false }={}){
+async function fetchRecords({ reason="sync", notifyNew=true, showError=false }={}){
   if(!sb || !session?.user) return false;
 
   if(recordsFetchPromise){
@@ -1567,7 +1563,7 @@ async function fetchRecords({ reason="sincronização", notifyNew=true, showErro
     lastSuccessfulSyncAt = Date.now();
     if(changed || reason !== "safety polling") render();
     updateSyncStatusDisplay();
-    console.info("[CRM Sync] Registros atualizados.", { reason, total: records.length, changed });
+    console.info("[CRM Sync] Records updated.", { reason, total: records.length, changed });
     return true;
   })().catch(error => {
     console.error("[CRM Sync] Could not load records.", { reason, error });
@@ -1609,19 +1605,19 @@ async function bootAfterLogin(){
     await ensureProfile();
     await Promise.all([fetchSettings(), fetchProfiles()]);
     buildFilters();
-    const loaded = await fetchRecords({ reason:"carga inicial", notifyNew:false, showError:true });
+    const loaded = await fetchRecords({ reason:"initial load", notifyNew:false, showError:true });
     if(!loaded) throw new Error("Could not load shared records.");
     await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus(), typeof partnerFetchContents === "function" ? partnerFetchContents() : Promise.resolve()]);
     bootedUserId = userId;
-    setAppDataState("ready", "Dados carregados", `${records.length} records and ${pendingItems.length} service items synced.`);
+    setAppDataState("ready", "Data loaded", `${records.length} records and ${pendingItems.length} service items synced.`);
     render();
     if($("loginModal").open) closeLogin();
     await syncController.start();
   })().catch(error => {
     console.error("[CRM Boot] Application startup failed.", error);
-    setAppDataState("error", "Could not load data", "Sua base continua segura. Verifique a conexão e toque em “Try again”.");
+    setAppDataState("error", "Could not load data", "Your data remains safe. Check the connection and select “Try again.”");
     render();
-    toast("Falha ao carregar os dados. Tente novamente.");
+    toast("Could not load data. Try again.");
     setSyncConnectionState("error");
   }).finally(() => {
     bootPromise = null;
@@ -1630,7 +1626,7 @@ async function bootAfterLogin(){
   return bootPromise;
 }
 
-/* ===== Sincronização resiliente: Realtime + polling ===== */
+/* ===== Resilient sync: Realtime + polling ===== */
 const syncController = (() => {
   const POLL_INTERVAL_MS = 45000;
   const WAKE_CHECK_INTERVAL_MS = 15000;
@@ -1747,7 +1743,7 @@ const syncController = (() => {
       if(status === "SUBSCRIBED"){
         reconnectAttempt = 0;
         setSyncConnectionState("online");
-        scheduleRefresh("realtime conectado", true, 50);
+        scheduleRefresh("realtime connected", true, 50);
         return;
       }
 
@@ -1763,7 +1759,7 @@ const syncController = (() => {
     if(connectPromise) return connectPromise;
     connectPromise = connectInternal(reason)
       .catch(error => {
-        console.error("[CRM Realtime] Falha ao conectar.", error);
+        console.error("[CRM Realtime] Connection failed.", error);
         scheduleReconnect("exception");
         return false;
       })
@@ -1771,7 +1767,7 @@ const syncController = (() => {
     return connectPromise;
   }
 
-  async function refresh(reason="sincronização", notifyNew=true, showError=false){
+  async function refresh(reason="sync", notifyNew=true, showError=false){
     const ok = await fetchRecords({ reason, notifyNew, showError });
     if(ok){
       await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus()]);
@@ -1786,10 +1782,10 @@ const syncController = (() => {
 
     window.addEventListener("online", () => {
       if(!started || !session?.user) return;
-      console.info("[CRM Sync] Navegador voltou a ficar online.");
+      console.info("[CRM Sync] Browser is back online.");
       setSyncConnectionState("reconnecting");
-      connect("navegador online");
-      scheduleRefresh("navegador online", true, 200);
+      connect("browser online");
+      scheduleRefresh("browser online", true, 200);
     });
 
     window.addEventListener("offline", () => {
@@ -2029,7 +2025,7 @@ function renderPendingKPIs(){
   $("kpiStuck").textContent = overdue;
   $("kpiDue").textContent = soon;
   $("kpiTotalLabel").textContent = "Open service items";
-  $("kpiStuckLabel").textContent = "Atrasadas";
+  $("kpiStuckLabel").textContent = "Overdue";
   $("kpiDueLabel").textContent = "Due date ≤ 7d";
 }
 
@@ -2038,7 +2034,7 @@ function pendingDueState(item){
   const date = new Date(item.due_at);
   const diff=(date-Date.now())/86400000;
   if(item.status==="completed") return {label:`Completed • ${fmtBRDateTime(item.completed_at)}`,className:""};
-  if(diff<0) return {label:`Atrasada • ${fmtBRDateTime(item.due_at)}`,className:"pendingDueLate"};
+  if(diff<0) return {label:`Overdue • ${fmtBRDateTime(item.due_at)}`,className:"pendingDueLate"};
   if(diff<=7) return {label:`Due soon • ${fmtBRDateTime(item.due_at)}`,className:"pendingDueSoon"};
   return {label:`Due • ${fmtBRDateTime(item.due_at)}`,className:""};
 }
@@ -2062,7 +2058,7 @@ function renderPendingCard(item){
 function renderPending(){
   renderPendingKPIs();
   if(!pendingSupported){
-    return `<div class="empty">A estrutura de Service & Tasks ainda precisa ser aplicada no Supabase.</div>`;
+    return `<div class="empty">The Service & Tasks database structure still needs to be applied to the Marel Supabase project.</div>`;
   }
   const data = pendingDataset();
   const groups = PENDING_TYPES.map(type=>({type,label:type,items:data.filter(item=>item.status!=="completed" && item.pending_type===type)}));
@@ -2252,7 +2248,7 @@ function renderReports(){
     overdue: savedSummary?.overdue_followups ?? overdue.length
   };
   const reportPeriod = latestWeekly
-    ? `Resumo programado de ${fmtBRDate(`${latestWeekly.week_start}T12:00:00`)} a ${fmtBRDate(`${latestWeekly.week_end}T12:00:00`)} • gerado ${fmtBRDateTime(latestWeekly.generated_at)}`
+    ? `Scheduled summary from ${fmtBRDate(`${latestWeekly.week_start}T12:00:00`)} to ${fmtBRDate(`${latestWeekly.week_end}T12:00:00`)} • generated ${fmtBRDateTime(latestWeekly.generated_at)}`
     : "Live view of the last 7 days • the next scheduled report will be generated Monday at 9:00 AM";
 
   renderKPIs(activeLeads);
@@ -2281,7 +2277,7 @@ function renderReports(){
   };
   const movementRows = weeklyEvents.slice(0,60).map(e=>{
     const r = records.find(x=>x.id===e.record_id);
-    return `<div class="reportRow"><b>${escapeHtml(eventLabels[e.event_type]||e.event_type)}</b> • ${escapeHtml(r ? fullName(r) : "Registro removido")}<br/><span style="color:var(--muted)">${escapeHtml(fmtBRDateTime(e.occurred_at))}${e.to_value ? ` • ${escapeHtml(e.to_value)}` : ""}</span></div>`;
+    return `<div class="reportRow"><b>${escapeHtml(eventLabels[e.event_type]||e.event_type)}</b> • ${escapeHtml(r ? fullName(r) : "Deleted record")}<br/><span style="color:var(--muted)">${escapeHtml(fmtBRDateTime(e.occurred_at))}${e.to_value ? ` • ${escapeHtml(e.to_value)}` : ""}</span></div>`;
   }).join("") || `<div class="empty">History will appear after the required migration.</div>`;
 
   return `
@@ -2291,7 +2287,7 @@ function renderReports(){
         <div class="summaryCard"><div class="t">New leads • week</div><div class="n">${shown.newLeads}</div><div class="d">Recent pipeline entries.</div></div>
         <div class="summaryCard"><div class="t">Stage changes • week</div><div class="n">${shown.stageMoves}</div><div class="d">Recorded stage changes.</div></div>
         <div class="summaryCard"><div class="t">Activities • week</div><div class="n">${shown.contacts}</div><div class="d">Interactions marked complete.</div></div>
-        <div class="summaryCard"><div class="t">Leads with a future action</div><div class="n">${shown.coverage===null ? "—" : `${shown.coverage}%`}</div><div class="d">Meta recomendada: 100% dos leads ativos.</div></div>
+        <div class="summaryCard"><div class="t">Leads with a future action</div><div class="n">${shown.coverage===null ? "—" : `${shown.coverage}%`}</div><div class="d">Recommended target: 100% of active leads.</div></div>
         <div class="summaryCard"><div class="t">Hot or warm leads</div><div class="n">${shown.fitPct===null ? "—" : `${shown.fitPct}%`}</div><div class="d">Based only on reviewed leads.</div></div>
         <div class="summaryCard"><div class="t">Unreviewed leads</div><div class="n">${shown.unassessed}</div><div class="d">Require commercial qualification.</div></div>
         <div class="summaryCard"><div class="t">Overdue follow-ups</div><div class="n">${shown.overdue}</div><div class="d">Require outreach or rescheduling.</div></div>
@@ -2378,13 +2374,13 @@ function renderSettings(){
           <input id="newSource" placeholder="New source" />
           <button class="primary" data-act="addSource">Add</button>
         </div>
-        ${srcLines || `<div class="empty">Sem origens.</div>`}
+        ${srcLines || `<div class="empty">No sources.</div>`}
       </div>
     </div>
 
     <div class="col" style="min-width:360px; max-width:420px;">
       <div class="colHd">
-        <div class="colTitle"><div>Loss reasons</div><small>Quando Lost</small></div>
+        <div class="colTitle"><div>Loss reasons</div><small>Used when a lead is marked Lost</small></div>
         <div class="count">${config.lost_reasons.length}</div>
       </div>
       <div class="dropZone" style="padding:0">
@@ -2392,7 +2388,7 @@ function renderSettings(){
           <input id="newReason" placeholder="New reason" />
           <button class="primary" data-act="addReason">Add</button>
         </div>
-        ${reasonLines || `<div class="empty">Sem motivos.</div>`}
+        ${reasonLines || `<div class="empty">No reasons.</div>`}
       </div>
     </div>
   `;
@@ -2425,7 +2421,7 @@ function buildFilters(){
 function updateLostBtn(){
   const btn = document.getElementById("btnToggleLost");
   if(!btn) return;
-  btn.textContent = hideLostColumn ? "Mostrar Lost" : "Ocultar Lost";
+  btn.textContent = hideLostColumn ? "Show Lost" : "Hide Lost";
   btn.disabled = currentTab !== "leads";
   $("wrapLostFilter").style.display = currentTab === "leads" ? "" : "none";
 }
@@ -2518,10 +2514,10 @@ async function moveRecordToStage(id, stage){
 
   const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", id);
   if(error){
-    toast("Erro ao mover etapa.");
+    toast("Could not move the record to that stage.");
     await fetchRecords();
   }else{
-    toast(old!==stage ? `Movido: ${stage}` : "Atualizado.");
+    toast(old!==stage ? `Moved to: ${stage}` : "Updated.");
   }
   render();
 }
@@ -2568,7 +2564,7 @@ function wireDnD(){
   }, true);
 
   boardEl.addEventListener("dragleave", (e)=>{
-    // quando sai do board, limpa
+    // Clear drag state when the pointer leaves the board.
     if(e.relatedTarget && boardEl.contains(e.relatedTarget)) return;
     clearDragover();
     lastZone = null;
@@ -2709,13 +2705,13 @@ function renderAppointmentList(){
       <div class="appointmentItemMain">
         <b>${escapeHtml(item.kind)} • ${escapeHtml(fmtBRDateTime(item.starts_at))}</b>
         ${item.details ? `<div>${escapeHtml(item.details)}</div>` : ""}
-        <div class="appointmentItemMeta">${item.duration_minutes || 30} min • lembrete ${item.reminder_minutes ? `${item.reminder_minutes} min antes` : "off"}${synced ? " • salvo no calendário" : " • aguardando salvar"}</div>
+        <div class="appointmentItemMeta">${item.duration_minutes || 30} min • reminder ${item.reminder_minutes ? `${item.reminder_minutes} min before` : "off"}${synced ? " • saved to calendar" : " • awaiting save"}</div>
       </div>
       ${synced
-        ? (item.web_link ? `<a class="btn" href="${escapeHtml(item.web_link)}" target="_blank" rel="noopener noreferrer">Abrir</a>` : `<span class="appointmentItemMeta">No calendário</span>`)
+        ? (item.web_link ? `<a class="btn" href="${escapeHtml(item.web_link)}" target="_blank" rel="noopener noreferrer">Open</a>` : `<span class="appointmentItemMeta">On calendar</span>`)
         : `<button class="ghost" type="button" data-remove-appointment="${escapeHtml(item.id)}">Remove</button>`}
     </div>`;
-  }).join("") : `<div class="appointmentEmpty">Nenhum compromisso cadastrado. Preencha os campos acima e toque em “+ Add appointment”.</div>`;
+  }).join("") : `<div class="appointmentEmpty">No appointments added. Complete the fields above and select “+ Add appointment.”</div>`;
 }
 function addAppointmentFromComposer({silent=false}={}){
   const appointment = appointmentFromComposer();
@@ -2750,7 +2746,7 @@ function updateModalMode(kind){
     : "Required: First name, last name, phone, city, and room.";
   $("outlookScheduleNotice").textContent = outlookStatus.connected
     ? `Appointments are saved to the approved Marel calendar account${outlookStatus.account_email ? ` (${outlookStatus.account_email})` : ""}.`
-    : "O calendário central precisa ser conectado uma única vez na aba Settings antes do primeiro agendamento.";
+    : "Connect the approved Marel calendar once in Settings before creating the first appointment.";
   updateLostReasonVisibility();
 }
 function openModal(record=null, options={}){
@@ -2837,13 +2833,13 @@ async function upsertFromForm(){
   const phone     = $("phone").value.trim();
   const city      = $("city").value.trim();
   const rooms     = kind === "specifier"
-    ? ($("companyName").value.trim() || $("specifierType").value || "Parcerias")
+    ? ($("companyName").value.trim() || $("specifierType").value || "Partner relationship")
     : $("rooms").value.trim();
 
   if(!firstName || !lastName || !phone || !city || (!rooms && kind !== "specifier")){
     toast(kind === "specifier"
-      ? "Preencha: First name, Last name, Phone e City."
-      : "Preencha: First name, Last name, Phone, City e Room / Space.");
+      ? "Complete first name, last name, phone, and city."
+      : "Complete first name, last name, phone, city, and room / space.");
     return false;
   }
 
@@ -2887,7 +2883,7 @@ async function upsertFromForm(){
     lost_reason: (kind !== "specifier" && pipeline==="lead" && stage==="Lost") ? ($("lostReason").value || null) : null
   };
 
-  // stage_entered_at: só muda se a etapa mudou OU se for novo
+  // Update stage_entered_at only for new records or stage changes.
   const now = nowISO();
   if(isNew){
     payload.stage_entered_at = now;
@@ -2899,7 +2895,7 @@ async function upsertFromForm(){
   }
 
   if(isNew){
-    // INSERT (não usar UPSERT com id vazio)
+    // Insert new record; do not upsert with an empty id.
     const { data, error } = await sb.from(TBL_RECORDS).insert(payload).select("*").single();
     if(error){
       console.error("INSERT error:", error);
@@ -2907,7 +2903,7 @@ async function upsertFromForm(){
       return false;
     }
     records.unshift(data);
-    $("id").value = data.id; // atualiza modal com id criado
+    $("id").value = data.id;
     return true;
   }else{
     // UPDATE
@@ -2927,8 +2923,8 @@ async function upsertFromForm(){
 async function markAsClosed(r){
   const patch = { pipeline:"closed", stage:CLOSED_STAGES[0], stage_entered_at: nowISO() };
   const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
-  if(error){ toast("Erro ao mover para Projects."); return; }
-  toast("Movido para Projects.");
+  if(error){ toast("Could not move the record to Projects."); return; }
+  toast("Moved to Projects.");
   await fetchRecords();
   setTab("closed");
 }
@@ -2936,8 +2932,8 @@ async function markAsClosed(r){
 async function markAsLost(r){
   const patch = { pipeline:"lead", stage:"Lost", stage_entered_at: nowISO(), lost_reason: r.lost_reason || config.lost_reasons[0] };
   const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
-  if(error){ toast("Erro ao marcar Lost."); return; }
-  toast("Marcado como Lost.");
+  if(error){ toast("Could not mark the record as Lost."); return; }
+  toast("Marked as Lost.");
   await fetchRecords();
   render();
 }
@@ -2962,7 +2958,7 @@ async function registerContactNow(r){
     .select("*")
     .single();
   if(error){
-    console.error("[CRM Contato] Could not log activity.", error);
+    console.error("[CRM Activity] Could not log activity.", error);
     toast("Could not log activity.");
     return false;
   }
@@ -2998,7 +2994,7 @@ function setTab(tab){
                tab==="specifiers" ? "Ongoing relationships with architects, interior designers, builders, contractors, and other partners." :
                tab==="pending" ? "Service, inspections, parts, and purchases tracked through completion." :
                tab==="reports" ? "Weekly report: activity, lead quality, and follow-up coverage." :
-               "Settings: origens e motivos de perda (compartilhado).";
+               "Settings: lead sources and lost reasons shared by the Marel team.";
 
   $("boardHint").innerHTML = `<div>${escapeHtml(hint)}</div><div></div>`;
   buildFilters();
@@ -3071,12 +3067,12 @@ $("appointmentList").addEventListener("click", event=>{
   if(!button) return;
   appointmentDrafts = appointmentDrafts.filter(item=>item.id!==button.dataset.removeAppointment);
   renderAppointmentList();
-  toast("Compromisso removido da lista.");
+  toast("Appointment removed from the list.");
 });
 $("btnSave").addEventListener("click", async (e)=>{
   e.preventDefault();
   if(await upsertFromForm()){
-    toast("Salvo.");
+    toast("Saved.");
     closeModal();
     render();
   }
@@ -3084,10 +3080,10 @@ $("btnSave").addEventListener("click", async (e)=>{
 $("btnOutlook").addEventListener("click", async (e)=>{
   e.preventDefault();
   if($("nextAction").value) addAppointmentFromComposer({silent:true});
-  if(!appointmentDrafts.length) return toast("Adicione pelo menos um compromisso.");
-  if(!outlookStatus.connected) return toast("Conecte o calendário central na aba Settings.");
+  if(!appointmentDrafts.length) return toast("Add at least one appointment.");
+  if(!outlookStatus.connected) return toast("Connect the approved Marel calendar in Settings.");
   $("btnOutlook").disabled=true;
-  $("btnOutlook").textContent="Criando compromisso...";
+  $("btnOutlook").textContent="Creating appointment...";
   try{
     if(!(await upsertFromForm())) return;
     const id=$("id").value;
@@ -3096,7 +3092,7 @@ $("btnOutlook").addEventListener("click", async (e)=>{
     for(const appointment of pendingAppointments){
       await saveOutlookEvent(id, appointment.id);
     }
-    await fetchRecords({reason:"compromissos criados",notifyNew:false});
+    await fetchRecords({reason:"appointments created",notifyNew:false});
     closeModal();
     render();
     toast(`${pendingAppointments.length} appointment(s) saved to the Marel calendar.`);
@@ -3203,7 +3199,7 @@ window.addEventListener("beforeinstallprompt", event=>{
 window.addEventListener("appinstalled", ()=>{
   deferredInstallPrompt = null;
   $("btnInstall").hidden = true;
-  toast("CRM instalado como aplicativo.");
+  toast("CRM installed as an app.");
 });
 $("btnInstall").addEventListener("click", async ()=>{
   if(deferredInstallPrompt){
@@ -3216,7 +3212,7 @@ $("btnInstall").addEventListener("click", async ()=>{
   const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   toast(isiOS
     ? "In Safari, select Share and then Add to Home Screen."
-    : "No menu do navegador, escolha “Install app” ou “Add à tela inicial”.");
+    : "In the browser menu, select “Install app” or “Add to Home screen.”");
 });
 
 let resizeRenderTimer = null;
@@ -3303,7 +3299,7 @@ $("board").addEventListener("click", async (e)=>{
   }
 });
 
-/* Backup local (para emergência) */
+/* Local emergency backup. */
 $("btnExportJson").addEventListener("click", ()=>{
   const payload = { version:"marel_houston_crm_v1", exportedAt: nowISO(), config, profiles, records, recordEvents, partnerContents, pendingItems, pendingAttachments };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
@@ -3312,7 +3308,7 @@ $("btnExportJson").addEventListener("click", ()=>{
   a.href=url; a.download=`crm_backup_${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
-  toast("Backup exportado.");
+  toast("Backup exported.");
 });
 
 $("importJson").addEventListener("change", async (e)=>{
@@ -3391,7 +3387,7 @@ $("importJson").addEventListener("change", async (e)=>{
           investment_profile: r.investment_profile || "To be determined",
           decision_due_at: r.decision_due_at || null,
           partner_classification: r.partner_classification || "Unclassified",
-          relationship_level: r.relationship_level || "Novo",
+          relationship_level: r.relationship_level || "New",
           first_visit_at: r.first_visit_at || null,
           region: r.region || null,
           project_profile: r.project_profile || null,
@@ -3449,7 +3445,7 @@ $("importJson").addEventListener("change", async (e)=>{
             description:content.description || null,
             external_url:content.external_url || null,
             tags:Array.isArray(content.tags) ? content.tags : [],
-            status:content.status === "Arquivado" ? "Arquivado" : "Ativo",
+            status:content.status === "Archived" ? "Archived" : "Active",
             registered_at:content.registered_at || nowISO(),
             notes:content.notes || null,
             created_by:content.created_by || session.user.id
@@ -3487,7 +3483,7 @@ $("importJson").addEventListener("change", async (e)=>{
       toast(`Import complete. Added: ${inserted} | Skipped: ${skipped} | Errors: ${errors}`);
     }catch(err){
       console.error(err);
-      toast("Falha ao importar.");
+      toast("Import failed.");
     }
   };
 
@@ -3500,7 +3496,7 @@ $("btnWipe").addEventListener("click", ()=>{
     records = [];
     profiles = [];
     render();
-    toast("Limpo (apenas local).");
+    toast("Local browser data cleared.");
   }
 });
 
@@ -3525,7 +3521,7 @@ if("serviceWorker" in navigator){
   updateAppStateBanner();
   updateSessionLine();
   // disable sign out / sync until configured
-  if(!isSettingsured()){
+  if(!isConfigured()){
     $("btnSignOut").disabled = true;
     $("btnSync").disabled = true;
   }
