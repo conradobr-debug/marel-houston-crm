@@ -153,7 +153,12 @@ begin
   row_before := case when tg_op in ('UPDATE', 'DELETE') then to_jsonb(old) else null end;
   row_after := case when tg_op in ('INSERT', 'UPDATE') then to_jsonb(new) else null end;
   target_workspace_id := coalesce((row_after ->> 'workspace_id')::uuid, (row_before ->> 'workspace_id')::uuid);
-  target_entity_id := coalesce((row_after ->> 'id')::uuid, (row_before ->> 'id')::uuid);
+  target_entity_id := coalesce(
+    (row_after ->> 'id')::uuid,
+    (row_before ->> 'id')::uuid,
+    (row_after ->> 'workspace_id')::uuid,
+    (row_before ->> 'workspace_id')::uuid
+  );
 
   insert into public.audit_events (
     workspace_id,
