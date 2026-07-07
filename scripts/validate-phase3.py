@@ -15,6 +15,7 @@ DATA_FILES = [
     "js/data/crm-mappers.js",
     "js/data/mock-crm-repository.js",
     "js/data/supabase-crm-repository.js",
+    "js/data/crm-repository-contract.js",
     "js/data/crm-data-service.js",
 ]
 
@@ -53,6 +54,12 @@ def validate_files() -> None:
         if found:
             fail(f"{relative} references legacy tables: {', '.join(found)}")
 
+    ui_text = "\n".join((ROOT / relative).read_text(encoding="utf-8") for relative in ("index.html", "partners.js"))
+    obsolete_ui_tokens = legacy_tables + ("crm_weekly_reports", "crm_pending_items", "crm_pending_attachments", "outlook-calendar")
+    found_ui = sorted(token for token in obsolete_ui_tokens if token in ui_text)
+    if found_ui:
+        fail(f"active UI files retain obsolete persistence tokens: {', '.join(found_ui)}")
+
     tracked_text = "\n".join((ROOT / relative).read_text(encoding="utf-8") for relative in DATA_FILES)
     if re.search(r"https://[a-z0-9_-]+\.supabase\.co", tracked_text, re.IGNORECASE):
         fail("data-access files contain a remote Supabase URL")
@@ -78,9 +85,9 @@ def main() -> int:
         if args.url:
             validate_preview(args.url)
     except (AssertionError, OSError) as error:
-        print(f"Phase 3 smoke validation failed: {error}", file=sys.stderr)
+        print(f"Frontend smoke validation failed: {error}", file=sys.stderr)
         return 1
-    print("Phase 3 smoke validation passed.")
+    print("Frontend smoke validation passed.")
     return 0
 
 

@@ -7,6 +7,7 @@ Phase 3 keeps the static vanilla JavaScript PWA and adds a compatibility layer b
 - `js/data/crm-mappers.js` maps normalized rows to and from the existing card and form shape.
 - `js/data/supabase-crm-repository.js` owns local Supabase Auth, table queries, writes, activities, settings, and realtime subscriptions.
 - `js/data/mock-crm-repository.js` provides synthetic browser-local fallback records and basic CRUD.
+- `js/data/crm-repository-contract.js` defines and validates the shared repository interface and core CRUD contract.
 - `js/data/crm-data-service.js` selects the local Supabase repository or the mock fallback.
 
 UI code should call `window.MarelCRMData.service`. Do not add Supabase queries to `index.html` or `partners.js` for supported Phase 3 flows.
@@ -67,7 +68,48 @@ Mock records are synthetic and stored only in browser `localStorage` under `mare
 
 ## Deferred modules
 
-Service-item photos, partner content-library persistence, legacy JSON restore, weekly report snapshots, and calendar integration remain disabled in normalized-schema mode. They require separate normalized designs and are not part of Phase 3.
+The obsolete persistence paths for combined CRM records, weekly snapshots, calendar integration, JSON restore, and service-item tables were removed in Phase 4A.
+
+The following compatibility surfaces remain intentionally:
+
+- the Service & Tasks navigation tab is a stable placeholder with no persistence or mutation controls;
+- JSON export remains available as a browser-local emergency snapshot, but restore is not supported;
+- partner cadence, content suggestions, and content-library UI structures remain for visual continuity, while content-library persistence stays unavailable;
+- the mock repository retains synthetic mapped records and browser-local storage for offline operation.
+
+## Role-aware UI guardrails
+
+RLS remains authoritative. The frontend additionally hides or disables controls that the current role should not use:
+
+| Role | UI mutation controls |
+|---|---|
+| `admin` | Full supported CRUD, stage changes, project conversion, deletion, and settings |
+| `sales_manager` | Create and edit sales/partner records, activities, stage changes, won/lost; no deletion or project editing |
+| `sales_user` | Create sales/partner records and mutate owned/created sales records only; no deletion or project conversion |
+| `project_manager` | Project workflow stage changes and project activities where compatible; no sales-record editing |
+| `viewer` | Read-only cards, details, search, filters, reports, and settings visibility |
+
+Cards without an allowed action do not display a mutation menu. Read-only detail forms disable fields and hide save and quick-action buttons.
+
+## Repository contract validation
+
+With local Supabase and the static preview running, open:
+
+```text
+http://127.0.0.1:8766/scripts/repository-contract-validation.html
+```
+
+Enter the synthetic local admin password and select **Run validation**. The page:
+
+- verifies that mock and Supabase repositories expose the same methods;
+- loads profiles and mapped records;
+- exercises search/filter behavior;
+- creates and edits a synthetic lead and partner;
+- verifies note and next-action task round trips;
+- changes a stage;
+- deletes the temporary synthetic records.
+
+The run reports `PASS` only when both repositories satisfy the same contract. It never accepts a hosted Supabase URL.
 
 ## Smoke validation
 
@@ -77,4 +119,4 @@ With the preview running:
 python3 scripts/validate-phase3.py --url http://127.0.0.1:8766
 ```
 
-The script uses only the Python standard library. It verifies script order, service-worker caching, normalized repository coverage, absence of legacy tables in the adapter, absence of remote Supabase URLs, and availability of preview assets.
+The script uses only the Python standard library. It verifies script order, service-worker caching, normalized repository coverage, absence of obsolete persistence tokens in active UI code, absence of remote Supabase URLs, and availability of preview assets.

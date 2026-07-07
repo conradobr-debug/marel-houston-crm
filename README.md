@@ -22,7 +22,9 @@ The repository includes a local-only Supabase foundation under `supabase/`:
 
 No remote Supabase project is linked. Do not run `supabase link` or `supabase db push` during local development.
 
-The Phase 3 frontend compatibility adapter reads the normalized local schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes now pass through the centralized data-access layer. An explicitly synthetic browser-local fallback remains available when local Supabase is not configured or cannot be reached.
+The frontend compatibility adapter reads the normalized local schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes pass through the centralized data-access layer. An explicitly synthetic browser-local fallback remains available when local Supabase is not configured or cannot be reached.
+
+Phase 4A removes executable legacy persistence paths, adds role-aware UI guardrails aligned with RLS, and provides a shared contract validation for the mock and Supabase repositories. Deployment and hosted Supabase remain out of scope.
 
 ## Local Supabase setup
 
