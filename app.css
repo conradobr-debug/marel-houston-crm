@@ -1,17 +1,17 @@
 :root{
-  --bg:#f2f0ec;
-  --line:#d9d4cc;
-  --text:#171717;
-  --muted:#706c66;
-  --black:#0b0b0b;
+  --bg:#f3f0ec;
+  --line:#ded8d1;
+  --text:#242424;
+  --muted:#76777a;
+  --black:#242424;
   --paper:#ffffff;
-  --sand:#c8b39f;
+  --sand:#c5a990;
   --sand-soft:#eee7df;
   --wood:#a36d49;
   --olive:#6f7868;
   --danger:#a0443e;
   --shadow:0 12px 34px rgba(30,25,20,.08);
-  --sans:"Avenir Next","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --sans:"Montserrat","Helvetica Neue",Helvetica,Arial,sans-serif;
   --mobile-nav-height:68px;
 }
 
@@ -82,16 +82,16 @@ header .sub{color:rgba(255,255,255,.64)}
 .brandClaim{margin-top:3px;color:rgba(255,255,255,.48);font-size:8px;font-weight:700;letter-spacing:.32em}
 .logo{
   position:relative;
-  width:220px;height:58px;min-width:220px;
+  width:190px;height:56px;min-width:190px;
   border-radius:0;
   overflow:hidden;
   background:none;
   box-shadow:none;
 }
 .logo img{
-  position:absolute;
-  width:220px;height:auto;
-  left:0;top:-52px;
+  position:static;
+  width:190px;height:56px;
+  object-fit:contain;
   display:block;
 }
 .marelPlaceholderMark{display:flex;align-items:center;justify-content:center;width:58px;height:58px;border:1px solid rgba(255,255,255,.35);color:#fff;font-size:27px;font-weight:300;letter-spacing:.04em}
@@ -211,7 +211,7 @@ dialog::backdrop{background:rgba(10,10,10,.68);backdrop-filter:blur(3px)}
   header .brand{width:100%;gap:10px;align-items:center}
   header h1{font-size:15px;font-weight:600}
   header .sub{max-width:calc(100vw - 150px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
-  .logo{width:124px;height:38px;min-width:124px}.logo img{width:124px;top:-29px}
+  .logo{width:124px;height:38px;min-width:124px}.logo img{width:124px;height:38px;object-fit:contain}
   .syncStatus{font-size:9px;padding:3px 7px;margin-top:4px}
   .actions{width:100%;justify-content:flex-start;display:flex;flex-wrap:nowrap;overflow-x:auto;padding:1px 0 3px;scrollbar-width:none}
   .actions::-webkit-scrollbar{display:none}
