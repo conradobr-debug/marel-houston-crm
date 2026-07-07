@@ -73,6 +73,7 @@
       lost_reason:null,
       created_at:lead.created_at,
       updated_at:lead.updated_at,
+      created_by:lead.created_by,
       _lead_id:lead.id,
       _note_id:note?.id || null,
       ...taskFields(task)
@@ -107,6 +108,7 @@
       lost_reason:opportunity.lost_reason || null,
       created_at:opportunity.created_at,
       updated_at:opportunity.updated_at,
+      created_by:opportunity.created_by,
       _entity_type:"opportunity",
       _opportunity_id:opportunity.id
     };
@@ -126,6 +128,7 @@
       lost_reason:opportunity.lost_reason || null,
       created_at:project.created_at,
       updated_at:project.updated_at,
+      created_by:project.created_by,
       _entity_type:"project",
       _opportunity_id:opportunity.id,
       _project_id:project.id
@@ -165,6 +168,7 @@
       partner_origin:partner.source || null,
       created_at:partner.created_at,
       updated_at:partner.updated_at,
+      created_by:partner.created_by,
       _entity_type:"partner",
       _partner_id:partner.id,
       _note_id:note?.id || null,

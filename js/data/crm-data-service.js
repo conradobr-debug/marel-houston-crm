@@ -7,6 +7,7 @@
 
   function useMock(reason){
     repository = api.createMockRepository();
+    api.repositoryContract.assertRepositoryContract(repository,"mock repository");
     fallbackReason = reason || "Local Supabase is not configured.";
     console.info("[CRM Data] Using synthetic offline fallback.",{reason:fallbackReason});
     return repository;
@@ -17,6 +18,7 @@
     repository=configured
       ? api.createSupabaseRepository(options.supabaseClient,{workspaceId:options.workspaceId})
       : api.createMockRepository();
+    api.repositoryContract.assertRepositoryContract(repository,`${repository.mode} repository`);
     fallbackReason=configured?null:"Local Supabase is not configured.";
     return repository.mode;
   }

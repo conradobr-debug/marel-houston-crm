@@ -1,4 +1,4 @@
-const CACHE_NAME = "marel-houston-shell-v2";
+const CACHE_NAME = "marel-houston-shell-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -22,6 +22,7 @@ const APP_SHELL = [
   "./js/data/crm-mappers.js",
   "./js/data/mock-crm-repository.js",
   "./js/data/supabase-crm-repository.js",
+  "./js/data/crm-repository-contract.js",
   "./js/data/crm-data-service.js"
 ];
 

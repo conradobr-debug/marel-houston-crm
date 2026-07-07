@@ -6,6 +6,14 @@
   const now = ()=>new Date().toISOString();
   const clone = value=>JSON.parse(JSON.stringify(value));
   const uuid = ()=>global.crypto?.randomUUID?.() || `mock-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  function applyCompatibilityFields(record){
+    const next=(record.appointments||[]).filter(item=>item.status!=="completed"&&item.starts_at).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0]||null;
+    record.next_action_at=next?.starts_at||record.next_action_at||null;
+    record.next_action=record.next_action_at?.slice(0,10)||null;
+    record.next_action_kind=next?.kind||record.next_action_kind||null;
+    record.next_action_details=next?.details||record.next_action_details||null;
+    return record;
+  }
 
   function initialState(){
     const created = now();
@@ -13,9 +21,9 @@
       profiles:[{id:ADMIN_ID,display_name:"Offline Demo Admin",role:"admin",is_active:true}],
       settings:{sources:["Showroom Visit","Referral","Website Form","Other"],lost_reasons:["Price","Timeline","Changed plans","Other"]},
       records:[
-        {id:"mock-lead-1",_entity_type:"opportunity",_lead_id:"mock-source-lead-1",_opportunity_id:"mock-lead-1",record_type:"lead",pipeline:"lead",first_name:"Jordan",last_name:"Example",phone:"+1 713-555-0191",email:"jordan@example.test",city:"Houston",rooms:"Synthetic Kitchen Opportunity",source:"Showroom Visit",owner_id:ADMIN_ID,stage:"Design in Progress",stage_entered_at:created,lead_quality:"Warm",estimate:125000,notes:"Synthetic offline demonstration record.",appointments:[],created_at:created,updated_at:created},
-        {id:"mock-partner-1",_entity_type:"partner",_partner_id:"mock-partner-1",record_type:"specifier",pipeline:"lead",first_name:"Taylor",last_name:"Sample",phone:"+1 713-555-0192",email:"taylor@example.test",city:"Houston",rooms:"Example Design Studio",company_name:"Example Design Studio",specifier_type:"Interior Designer",owner_id:ADMIN_ID,stage:"Relationship Development",stage_entered_at:created,partner_classification:"B — Potential",relationship_level:"Developing",appointments:[],created_at:created,updated_at:created},
-        {id:"mock-project-1",_entity_type:"project",_lead_id:"mock-source-lead-2",_opportunity_id:"mock-source-opportunity-2",_project_id:"mock-project-1",record_type:"lead",pipeline:"closed",first_name:"Morgan",last_name:"Demo",phone:"+1 713-555-0193",city:"Bellaire",rooms:"Synthetic Residence",source:"Referral",owner_id:ADMIN_ID,stage:"Technical Review",stage_entered_at:created,lead_quality:"Hot",estimate:210000,appointments:[],created_at:created,updated_at:created}
+        {id:"mock-lead-1",_entity_type:"opportunity",_lead_id:"mock-source-lead-1",_opportunity_id:"mock-lead-1",record_type:"lead",pipeline:"lead",first_name:"Jordan",last_name:"Example",phone:"+1 713-555-0191",email:"jordan@example.test",city:"Houston",rooms:"Synthetic Kitchen Opportunity",source:"Showroom Visit",owner_id:ADMIN_ID,created_by:ADMIN_ID,stage:"Design in Progress",stage_entered_at:created,lead_quality:"Warm",estimate:125000,notes:"Synthetic offline demonstration record.",appointments:[],created_at:created,updated_at:created},
+        {id:"mock-partner-1",_entity_type:"partner",_partner_id:"mock-partner-1",record_type:"specifier",pipeline:"lead",first_name:"Taylor",last_name:"Sample",phone:"+1 713-555-0192",email:"taylor@example.test",city:"Houston",rooms:"Example Design Studio",company_name:"Example Design Studio",specifier_type:"Interior Designer",owner_id:ADMIN_ID,created_by:ADMIN_ID,stage:"Relationship Development",stage_entered_at:created,partner_classification:"B — Potential",relationship_level:"Developing",appointments:[],created_at:created,updated_at:created},
+        {id:"mock-project-1",_entity_type:"project",_lead_id:"mock-source-lead-2",_opportunity_id:"mock-source-opportunity-2",_project_id:"mock-project-1",record_type:"lead",pipeline:"closed",first_name:"Morgan",last_name:"Demo",phone:"+1 713-555-0193",city:"Bellaire",rooms:"Synthetic Residence",source:"Referral",owner_id:ADMIN_ID,created_by:ADMIN_ID,stage:"Technical Review",stage_entered_at:created,lead_quality:"Hot",estimate:210000,appointments:[],created_at:created,updated_at:created}
       ],
       events:[]
     };
@@ -53,15 +61,15 @@
         const created=now();
         const id=uuid();
         const type=payload.record_type==="specifier" ? "partner" : (payload.pipeline==="closed" ? "project" : "opportunity");
-        const record={...payload,id,_entity_type:type,record_type:type==="partner"?"specifier":"lead",pipeline:type==="project"?"closed":"lead",stage_entered_at:created,created_at:created,updated_at:created};
+        const record={...payload,id,_entity_type:type,record_type:type==="partner"?"specifier":"lead",pipeline:type==="project"?"closed":"lead",created_by:ADMIN_ID,stage_entered_at:created,created_at:created,updated_at:created};
         if(type==="partner") record._partner_id=id;
         if(type==="opportunity"){record._lead_id=id;record._opportunity_id=id;}
         if(type==="project"){record._lead_id=id;record._opportunity_id=id;record._project_id=id;}
-        state.records.unshift(record); save(); return clone(record);
+        applyCompatibilityFields(record);state.records.unshift(record); save(); return clone(record);
       },
       async updateRecord(existing,payload){
         const record=find(existing?.id||existing); if(!record) throw new Error("Record not found.");
-        Object.assign(record,payload,{updated_at:now()}); save(); return clone(record);
+        Object.assign(record,payload,{updated_at:now()});applyCompatibilityFields(record); save(); return clone(record);
       },
       async updateStage(existing,stage){
         const id=existing?.id||existing;

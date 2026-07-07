@@ -481,14 +481,20 @@ renderCard = function(record){
   const level = record.relationship_level || "New";
   const schedule = scheduleStatus(record);
   const opportunity = partnerHasOpportunity(record);
-  return `<div class="card partnerCard ${stageClass(record.stage||"Identified")} grab" draggable="${isMobileLayout()?"false":"true"}" data-id="${escapeHtml(record.id)}">
-    <div class="cTop"><div><div class="cName">${escapeHtml(fullName(record))}</div><div class="partnerCompany">${escapeHtml(record.company_name||"Company not provided")}</div></div><div class="rightTop"><span class="badge classificationBadge ${classification.startsWith("A")?"classA":classification.startsWith("B")?"classB":classification.startsWith("C")?"classC":""}">${escapeHtml(classification)}</span><button class="dots" type="button" data-menu-btn="${escapeHtml(record.id)}">...</button></div></div>
+  const actions=[
+    canEditRecord(record)?`<button type="button" data-act="edit" data-id="${escapeHtml(record.id)}">Open partner</button>`:"",
+    canLogActivity(record)?`<button type="button" data-act="logContact" data-id="${escapeHtml(record.id)}">Log activity</button>`:"",
+    canEditRecord(record)?`<button type="button" data-act="schedule" data-id="${escapeHtml(record.id)}">Create appointment</button>`:""
+  ].filter(Boolean).join("");
+  const canMove=canChangeStage(record)&&!isMobileLayout();
+  return `<div class="card partnerCard ${stageClass(record.stage||"Identified")} ${canMove?"grab":""}" draggable="${canMove?"true":"false"}" data-id="${escapeHtml(record.id)}">
+    <div class="cTop"><div><div class="cName">${escapeHtml(fullName(record))}</div><div class="partnerCompany">${escapeHtml(record.company_name||"Company not provided")}</div></div><div class="rightTop"><span class="badge classificationBadge ${classification.startsWith("A")?"classA":classification.startsWith("B")?"classB":classification.startsWith("C")?"classC":""}">${escapeHtml(classification)}</span>${actions?`<button class="dots" type="button" data-menu-btn="${escapeHtml(record.id)}">...</button>`:""}</div></div>
     <div class="row"><span class="chip">${escapeHtml(record.specifier_type||"Partner")}</span><span class="chip muted">${escapeHtml(record.city||"City —")}</span><span class="chip muted">${escapeHtml(profileNameById(record.owner_id))}</span></div>
     <div class="partnerStatusRow"><span>${escapeHtml(level)}</span><span>${days===null?"No contact logged":`${days} day(s) since contact`}</span></div>
     <div class="meta">Last contact: <b>${escapeHtml(fmtBRDate(record.last_contact_at))}</b>${next?` • Next: <b>${escapeHtml(fmtBRDateTime(next.toISOString()))}</b>`:""}</div>
     <div class="partnerSignals">${record.cadence_active?`<span title="Active cadence">Active cadence</span>`:""}${opportunity?`<span title="Opportunity">${record.stage==="Active Referral Partner"?"Active referral":"Opportunity"}</span>`:""}${!next?`<span class="signalWarn">No next action</span>`:""}${days>14?`<span class="signalWarn">14+ days without contact</span>`:""}</div>
     <div class="scheduleState ${schedule.kind}">${escapeHtml(schedule.label)}</div>
-    <div class="menu" data-menu="${escapeHtml(record.id)}"><button type="button" data-act="edit" data-id="${escapeHtml(record.id)}">Open partner</button><button type="button" data-act="logContact" data-id="${escapeHtml(record.id)}">Log activity</button><button type="button" data-act="schedule" data-id="${escapeHtml(record.id)}">Create appointment</button></div>
+    ${actions?`<div class="menu" data-menu="${escapeHtml(record.id)}">${actions}</div>`:""}
   </div>`;
 };
 
