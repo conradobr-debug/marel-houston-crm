@@ -896,11 +896,18 @@
 <script src="config/measurement-config.js"></script>
 <script src="config/runtime-config.js" onerror="window.MAREL_RUNTIME=Object.freeze({supabaseUrl:'',supabasePublishableKey:'',publicUrl:''})"></script>
 <script src="js/config-loader.js"></script>
+<script src="js/data/crm-mappers.js"></script>
+<script src="js/data/mock-crm-repository.js"></script>
+<script src="js/data/supabase-crm-repository.js"></script>
+<script src="js/data/crm-data-service.js"></script>
 
 <script>
 /* Configure an independent Marel Supabase project through config/runtime-config.js. */
 const SUPABASE_URL = window.APP_CONFIG?.runtime?.supabaseUrl || "";
 const SUPABASE_ANON_KEY = window.APP_CONFIG?.runtime?.supabasePublishableKey || "";
+const CRM_WORKSPACE_ID = window.APP_CONFIG?.runtime?.workspaceId || "10000000-0000-4000-8000-000000000001";
+const NORMALIZED_SCHEMA_MODE = true;
+const crmData = window.MarelCRMData.service;
 
 /* ===== Pipelines ===== */
 const LEAD_STAGES = window.APP_CONFIG.pipelines.sales.slice();
@@ -1023,6 +1030,7 @@ function scheduleStatus(r){
   return {kind:"ok", label:`${action} scheduled • ${fmtBRDateTime(next.toISOString())}`};
 }
 async function callOutlook(action, payload={}){
+  if(NORMALIZED_SCHEMA_MODE) throw new Error("Calendar integration is outside the Phase 3 local MVP.");
   if(!sb || !session?.access_token) throw new Error("Sign in to the CRM again.");
   const response = await fetch(`${SUPABASE_URL}/functions/v1/outlook-calendar`, {
     method:"POST",
@@ -1038,6 +1046,10 @@ async function callOutlook(action, payload={}){
   return result;
 }
 async function fetchOutlookStatus(){
+  if(NORMALIZED_SCHEMA_MODE){
+    outlookStatus = {configured:false, connected:false, account_email:null, provider:null};
+    return false;
+  }
   if(!session?.user) return false;
   try{
     outlookStatus = await callOutlook("status");
@@ -1289,12 +1301,17 @@ function setSyncConnectionState(state){
 
 /* ===== Auth + Init ===== */
 function isConfigured(){
-  return SUPABASE_URL.startsWith("http") && SUPABASE_ANON_KEY.length > 20;
+  try{
+    const url = new URL(SUPABASE_URL);
+    return ["127.0.0.1","localhost"].includes(url.hostname) && SUPABASE_ANON_KEY.length > 20;
+  }catch(error){
+    return false;
+  }
 }
 function updateSessionLine(){
   const el = $("sessionLine");
-  if(!isConfigured()){
-    el.textContent = "Safe offline template. Configure an independent Marel Supabase project to enable sign-in and sync.";
+  if(crmData.mode === "mock"){
+    el.textContent = "Synthetic offline fallback. Changes stay in this browser only.";
     return;
   }
   if(!session?.user){
@@ -1304,21 +1321,18 @@ function updateSessionLine(){
   el.textContent = `Connected: ${session.user.email}`;
 }
 async function initSupabase(){
-  if(!isConfigured()) return;
-  setAppDataState("loading", "Loading your data", "Connecting to the independent Marel workspace…");
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { data, error } = await sb.auth.getSession();
-  if(error){
-    console.error("[CRM Auth] Could not restore the session.", error);
-    toast("Could not restore the session.");
+  setAppDataState("loading", "Loading your data", "Connecting to the local Marel workspace…");
+  sb = isConfigured() ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  crmData.configure({supabaseClient:sb,supabaseUrl:SUPABASE_URL,workspaceId:CRM_WORKSPACE_ID});
+  try{
+    session = await crmData.getSession();
+  }catch(error){
+    console.error("[CRM Auth] Could not restore the local session.", error);
+    setAppDataState("auth", "Sign-in required", "Sign in with a synthetic local Marel user.");
   }
-  session = data.session;
   updateSessionLine();
 
-  sb.auth.onAuthStateChange((event, newSession) => {
-    // Keep asynchronous work outside Supabase's internal auth callback.
-    setTimeout(() => handleAuthStateChange(event, newSession), 0);
-  });
+  crmData.onAuthStateChange((event,newSession)=>handleAuthStateChange(event,newSession));
 
   if(!session?.user){
     setAppDataState("auth", "Sign-in required", "Sign in with an authorized Marel user to load the workspace.");
@@ -1380,7 +1394,7 @@ function closeLogin(){
   $("loginModal").close();
 }
 async function doLogin(){
-  if(!sb) return toast("Supabase is not configured.");
+  if(crmData.mode === "mock") return toast("Offline fallback does not require sign-in.");
   const email = $("loginEmail").value.trim();
   const password = $("loginPass").value;
   if(!email || !password) return toast("Enter email and password.");
@@ -1390,9 +1404,7 @@ async function doLogin(){
   setAppDataState("loading", "Loading your data", "Signed in. Loading leads, projects, and service items…");
   render();
   try{
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if(error) throw error;
-    session = data.session;
+    session = await crmData.signIn(email,password);
     updateSessionLine();
     await bootAfterLogin();
     if(bootedUserId === session?.user?.id) closeLogin();
@@ -1408,78 +1420,44 @@ async function doLogin(){
   }
 }
 async function doSignOut(){
-  if(!sb) return;
+  if(crmData.mode === "mock") return toast("Offline fallback is already local-only.");
   await syncController.stop();
-  await sb.auth.signOut();
+  await crmData.signOut();
   toast("Signed out.");
 }
 
 /* ===== Data bootstrap ===== */
 async function ensureProfile(){
-  const uid = session.user.id;
-  const { data, error } = await sb.from(TBL_PROFILES).select("id, display_name").eq("id", uid).maybeSingle();
-  if(error) return toast("Could not load the profile.");
-
-  if(!data){
-    const display = prompt("Display name for the CRM:");
-    const name = (display||"").trim() || "Owner";
-    const ins = await sb.from(TBL_PROFILES).insert({ id: uid, display_name: name });
-    if(ins.error) return toast("Could not create the profile.");
-  }
-}
-
-async function ensureSettingsRow(){
-  // id=1
-  const { data, error } = await sb.from(TBL_CONFIG).select("id, sources, lost_reasons").eq("id", 1).maybeSingle();
-  if(error){
-    toast("Could not load settings.");
-    return;
-  }
-  if(!data){
-    const { error: insErr } = await sb.from(TBL_CONFIG).insert({ id: 1, sources: DEFAULT_SOURCES, lost_reasons: DEFAULT_LOST_REASONS });
-    if(insErr) toast("Could not create settings.");
-  }
-}
-
-async function fetchSettings(){
-  const { data, error } = await sb.from(TBL_CONFIG).select("id, sources, lost_reasons").eq("id", 1).single();
-  if(error) return toast("Could not load settings.");
-  config.sources = Array.isArray(data.sources) ? data.sources : DEFAULT_SOURCES.slice();
-  config.lost_reasons = Array.isArray(data.lost_reasons) ? data.lost_reasons : DEFAULT_LOST_REASONS.slice();
-}
-
-async function fetchProfiles(){
-  const { data, error } = await sb.from(TBL_PROFILES).select("id, display_name").order("display_name", { ascending: true });
-  if(error) return toast("Could not load users.");
-  profiles = data || [];
-}
-
-async function fetchRecordEvents(){
-  if(!sb || !session?.user || !eventsSupported) return false;
-  const since = new Date(Date.now() - 60*24*60*60*1000).toISOString();
-  const { data, error } = await sb
-    .from(TBL_EVENTS)
-    .select("*")
-    .gte("occurred_at", since)
-    .order("occurred_at", { ascending:false })
-    .limit(1500);
-
-  if(error){
-    const missingTable = ["42P01","PGRST205"].includes(error.code);
-    if(missingTable){
-      eventsSupported = false;
-      console.info("[CRM Reports] History is not available yet; apply the required migration.");
-    }else{
-      console.warn("[CRM Reports] Could not load history.", error);
-    }
-    return false;
-  }
-
-  recordEvents = data || [];
   return true;
 }
 
+async function ensureSettingsRow(){
+  return true;
+}
+
+async function fetchSettings(){
+  const data=await crmData.getSettings();
+  config.sources = Array.isArray(data.sources) && data.sources.length ? data.sources : DEFAULT_SOURCES.slice();
+  config.lost_reasons = Array.isArray(data.lost_reasons) && data.lost_reasons.length ? data.lost_reasons : DEFAULT_LOST_REASONS.slice();
+}
+
+async function fetchProfiles(){
+  profiles = await crmData.listProfiles();
+}
+
+async function fetchRecordEvents(){
+  if(!session?.user || !eventsSupported) return false;
+  try{
+    recordEvents=await crmData.listEvents();
+    return true;
+  }catch(error){
+    console.warn("[CRM Reports] Could not load normalized history.",error);
+    return false;
+  }
+}
+
 async function fetchWeeklyReports(){
+  if(NORMALIZED_SCHEMA_MODE){ weeklyReports=[]; weeklyReportsSupported=false; return false; }
   if(!sb || !session?.user || !weeklyReportsSupported) return false;
   const previousLatestId = weeklyReports[0]?.id || null;
   const { data, error } = await sb
@@ -1504,6 +1482,7 @@ async function fetchWeeklyReports(){
 }
 
 async function fetchPendingData(){
+  if(NORMALIZED_SCHEMA_MODE){ pendingItems=[];pendingAttachments=[];pendingSupported=false;return false; }
   if(!sb || !session?.user || !pendingSupported) return false;
   const [itemsResult, attachmentsResult] = await Promise.all([
     sb.from(TBL_PENDING).select("*").order("created_at", {ascending:false}),
@@ -1531,7 +1510,7 @@ function recordsStateVersion(items){
 }
 
 async function fetchRecords({ reason="sync", notifyNew=true, showError=false }={}){
-  if(!sb || !session?.user) return false;
+  if(!session?.user) return false;
 
   if(recordsFetchPromise){
     recordsRefreshQueued = true;
@@ -1543,14 +1522,7 @@ async function fetchRecords({ reason="sync", notifyNew=true, showError=false }={
   const hadInitialSnapshot = hasInitialRecordSnapshot;
 
   recordsFetchPromise = (async () => {
-    const { data, error } = await sb
-      .from(TBL_RECORDS)
-      .select("*")
-      .order("stage_entered_at", { ascending: false });
-
-    if(error) throw error;
-
-    const loadedRecords = data || [];
+    const loadedRecords = await crmData.listRecords();
     const changed = previousVersion !== recordsStateVersion(loadedRecords);
     records = loadedRecords;
     if(hadInitialSnapshot && notifyNew){
@@ -1587,7 +1559,7 @@ function profileNameById(id){
 }
 
 async function bootAfterLogin(){
-  if(!sb || !session?.user) return;
+  if(!session?.user) return;
   if(bootedUserId === session.user.id){
     await syncController.start();
     return;
@@ -1607,9 +1579,10 @@ async function bootAfterLogin(){
     buildFilters();
     const loaded = await fetchRecords({ reason:"initial load", notifyNew:false, showError:true });
     if(!loaded) throw new Error("Could not load shared records.");
-    await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus(), typeof partnerFetchContents === "function" ? partnerFetchContents() : Promise.resolve()]);
+    await Promise.all([fetchRecordEvents(), typeof partnerFetchContents === "function" ? partnerFetchContents() : Promise.resolve()]);
     bootedUserId = userId;
-    setAppDataState("ready", "Data loaded", `${records.length} records and ${pendingItems.length} service items synced.`);
+    const sourceLabel=crmData.mode==="mock"?"synthetic offline records":"local Supabase records";
+    setAppDataState("ready", "Data loaded", `${records.length} ${sourceLabel} loaded.`);
     render();
     if($("loginModal").open) closeLogin();
     await syncController.start();
@@ -1693,18 +1666,18 @@ const syncController = (() => {
   }
 
   async function removeCurrentChannel(){
-    const oldChannel = channel;
+    const unsubscribe = channel;
     channel = null;
-    if(!oldChannel || !sb) return;
+    if(!unsubscribe) return;
     try{
-      await sb.removeChannel(oldChannel);
+      await unsubscribe();
     }catch(error){
       console.warn("[CRM Realtime] Could not remove the previous channel.", error);
     }
   }
 
   async function connectInternal(reason){
-    if(!started || !sb || !session?.user) return false;
+    if(!started || !session?.user) return false;
     if(!navigator.onLine){
       setSyncConnectionState("offline");
       return false;
@@ -1716,28 +1689,9 @@ const syncController = (() => {
     await removeCurrentChannel();
     if(generation !== channelGeneration || !started || !session?.user) return false;
 
-    console.info("[CRM Realtime] Creating a single channel.", { reason, generation });
-    const nextChannel = sb
-      .channel(`crm_records_sync_${session.user.id}`)
-      .on(
-        "postgres_changes",
-        { event:"*", schema:"public", table:TBL_RECORDS },
-        handleRealtimeChange
-      )
-      .on(
-        "postgres_changes",
-        { event:"*", schema:"public", table:TBL_PENDING },
-        handlePendingRealtimeChange
-      )
-      .on(
-        "postgres_changes",
-        { event:"*", schema:"public", table:TBL_PENDING_ATTACHMENTS },
-        handlePendingRealtimeChange
-      );
-
-    channel = nextChannel;
-    nextChannel.subscribe((status, error) => {
-      if(generation !== channelGeneration || channel !== nextChannel) return;
+    console.info("[CRM Realtime] Creating normalized repository subscription.", { reason, generation });
+    const unsubscribe = await crmData.subscribe(handleRealtimeChange,(status,error)=>{
+      if(generation !== channelGeneration) return;
       console.info("[CRM Realtime] Channel status.", { status, hasError:Boolean(error) });
 
       if(status === "SUBSCRIBED"){
@@ -1752,6 +1706,9 @@ const syncController = (() => {
         scheduleReconnect(status);
       }
     });
+    if(generation !== channelGeneration){ await unsubscribe(); return false; }
+    channel = unsubscribe;
+    if(crmData.mode === "mock") setSyncConnectionState("offline");
     return true;
   }
 
@@ -1770,7 +1727,7 @@ const syncController = (() => {
   async function refresh(reason="sync", notifyNew=true, showError=false){
     const ok = await fetchRecords({ reason, notifyNew, showError });
     if(ok){
-      await Promise.all([fetchRecordEvents(), fetchWeeklyReports(), fetchPendingData(), fetchOutlookStatus()]);
+      await fetchRecordEvents();
       if(currentTab === "reports") render();
     }
     return ok;
@@ -1838,7 +1795,7 @@ const syncController = (() => {
   }
 
   async function start(){
-    if(!sb || !session?.user) return;
+    if(!session?.user) return;
     bindLifecycle();
     startTimers();
     started = true;
@@ -1846,7 +1803,7 @@ const syncController = (() => {
   }
 
   async function resume(reason){
-    if(!sb || !session?.user) return;
+    if(!session?.user) return;
     if(!started) return start();
     await connect(reason);
     scheduleRefresh(reason, true, 150);
@@ -2504,7 +2461,7 @@ async function moveRecordToStage(id, stage){
   const r = records.find(x=>x.id===id);
   if(!r) return;
 
-  if(!sb || !session?.user) return toast("Not signed in.");
+  if(!session?.user) return toast("Not signed in.");
 
   const old = r.stage;
   if(old === stage) return;
@@ -2512,12 +2469,14 @@ async function moveRecordToStage(id, stage){
   // optimistic
   r.stage = stage; r.stage_entered_at = patch.stage_entered_at;
 
-  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", id);
-  if(error){
+  try{
+    const updated=await crmData.updateStage(r,stage);
+    if(updated) Object.assign(r,updated);
+    toast(old!==stage ? `Moved to: ${stage}` : "Updated.");
+  }catch(error){
+    console.error("[CRM Data] Stage update failed.",error);
     toast("Could not move the record to that stage.");
     await fetchRecords();
-  }else{
-    toast(old!==stage ? `Moved to: ${stage}` : "Updated.");
   }
   render();
 }
@@ -2819,7 +2778,7 @@ function openModal(record=null, options={}){
 function closeModal(){ $("modal").close(); currentEditingId=null; }
 
 async function upsertFromForm(){
-  if(!sb || !session?.user) { toast("Not signed in."); return false; }
+  if(!session?.user) { toast("Not signed in."); return false; }
 
   const id = ($("id").value || "").trim();
   const isNew = !id;
@@ -2895,44 +2854,45 @@ async function upsertFromForm(){
   }
 
   if(isNew){
-    // Insert new record; do not upsert with an empty id.
-    const { data, error } = await sb.from(TBL_RECORDS).insert(payload).select("*").single();
-    if(error){
-      console.error("INSERT error:", error);
+    try{
+      const data=await crmData.createRecord(payload);
+      if(!data) throw new Error("The repository returned no record.");
+      records.unshift(data);
+      $("id").value = data.id;
+      return true;
+    }catch(error){
+      console.error("[CRM Data] Create failed:", error);
       toast("Could not create the record.");
       return false;
     }
-    records.unshift(data);
-    $("id").value = data.id;
-    return true;
   }else{
-    // UPDATE
-    const { data, error } = await sb.from(TBL_RECORDS).update(payload).eq("id", id).select("*").single();
-    if(error){
-      console.error("UPDATE error:", error);
+    const existing=records.find(record=>record.id===id);
+    try{
+      const data=await crmData.updateRecord(existing,payload);
+      if(!data) throw new Error("The repository returned no record.");
+      const idx = records.findIndex(r=>r.id===data.id || r.id===id);
+      if(idx>=0) records[idx]=data; else records.unshift(data);
+      return true;
+    }catch(error){
+      console.error("[CRM Data] Update failed:", error);
       toast("Could not update the record.");
       return false;
     }
-    const idx = records.findIndex(r=>r.id===data.id);
-    if(idx>=0) records[idx]=data; else records.unshift(data);
-    return true;
   }
 }
 
 
 async function markAsClosed(r){
-  const patch = { pipeline:"closed", stage:CLOSED_STAGES[0], stage_entered_at: nowISO() };
-  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
-  if(error){ toast("Could not move the record to Projects."); return; }
+  try{ await crmData.markClosed(r); }
+  catch(error){ console.error("[CRM Data] Project conversion failed.",error);toast("Could not move the record to Projects.");return; }
   toast("Moved to Projects.");
   await fetchRecords();
   setTab("closed");
 }
 
 async function markAsLost(r){
-  const patch = { pipeline:"lead", stage:"Lost", stage_entered_at: nowISO(), lost_reason: r.lost_reason || config.lost_reasons[0] };
-  const { error } = await sb.from(TBL_RECORDS).update(patch).eq("id", r.id);
-  if(error){ toast("Could not mark the record as Lost."); return; }
+  try{ await crmData.markLost(r,r.lost_reason||config.lost_reasons[0]); }
+  catch(error){ console.error("[CRM Data] Lost update failed.",error);toast("Could not mark the record as Lost.");return; }
   toast("Marked as Lost.");
   await fetchRecords();
   render();
@@ -2940,8 +2900,8 @@ async function markAsLost(r){
 
 async function deleteRecord(r){
   if(!confirm("Delete this record?")) return;
-  const { error } = await sb.from(TBL_RECORDS).delete().eq("id", r.id);
-  if(error){ toast("Could not delete."); return; }
+  try{ await crmData.deleteRecord(r); }
+  catch(error){ console.error("[CRM Data] Delete failed.",error);toast("Could not delete.");return; }
   toast("Deleted.");
   records = records.filter(x=>x.id!==r.id);
   render();
@@ -2949,21 +2909,15 @@ async function deleteRecord(r){
 }
 
 async function registerContactNow(r){
-  if(!r || !sb || !session?.user) return toast("Not signed in.");
+  if(!r || !session?.user) return toast("Not signed in.");
   const timestamp = nowISO();
-  const { data, error } = await sb
-    .from(TBL_RECORDS)
-    .update({ last_contact_at:timestamp })
-    .eq("id", r.id)
-    .select("*")
-    .single();
-  if(error){
+  try{
+    await crmData.createActivity(r,{subject:"Activity logged",occurred_at:timestamp});
+  }catch(error){
     console.error("[CRM Activity] Could not log activity.", error);
     toast("Could not log activity.");
     return false;
   }
-  const idx = records.findIndex(x=>x.id===r.id);
-  if(idx>=0) records[idx]=data;
   await fetchRecordEvents();
   render();
   toast("Activity logged.");
@@ -2972,8 +2926,8 @@ async function registerContactNow(r){
 
 /* ===== Settings updates ===== */
 async function saveSettings(){
-  const { error } = await sb.from(TBL_CONFIG).upsert({ id:1, sources: config.sources, lost_reasons: config.lost_reasons });
-  if(error) toast("Could not save settings.");
+  try{ await crmData.saveSettings(config); }
+  catch(error){ console.error("[CRM Data] Settings update failed.",error);toast("Could not save settings."); }
 }
 
 /* ===== Tabs + filters ===== */
@@ -3052,7 +3006,10 @@ $("btnToggleLost").addEventListener("click", ()=>{
   render();
 });
 
-$("btnNew").addEventListener("click", ()=> currentTab==="pending" ? openPendingModal(null) : openModal(null));
+$("btnNew").addEventListener("click", ()=>{
+  if(currentTab==="pending" && NORMALIZED_SCHEMA_MODE) return toast("Service items are outside the Phase 3 adapter scope.");
+  currentTab==="pending" ? openPendingModal(null) : openModal(null);
+});
 $("btnCloseModal").addEventListener("click", closeModal);
 $("btnCancel").addEventListener("click", closeModal);
 $("pipeline").addEventListener("change", ()=>{
@@ -3178,7 +3135,7 @@ $("loginModal").addEventListener("cancel", event=>{
 
 $("btnSignOut").addEventListener("click", ()=> doSignOut());
 $("btnSync").addEventListener("click", async ()=>{
-  if(!sb || !session?.user) return openLogin();
+  if(!session?.user) return openLogin();
   const ok = await syncController.refresh("manual sync", true, true);
   if(!ok) return;
   toast("Sync completed.");
@@ -3186,7 +3143,7 @@ $("btnSync").addEventListener("click", async ()=>{
 });
 
 $("btnRetryLoad").addEventListener("click", async ()=>{
-  if(!sb || !session?.user) return openLogin();
+  if(!session?.user) return openLogin();
   bootedUserId = null;
   await bootAfterLogin();
 });
@@ -3226,7 +3183,7 @@ $("board").addEventListener("click", async (e)=>{
   if(currentTab!=="config") return;
   const btn = e.target.closest?.("button[data-act]");
   if(!btn) return;
-  if(!sb || !session?.user) return toast("Not signed in.");
+  if(!session?.user) return toast("Not signed in.");
 
   const act = btn.dataset.act;
 
@@ -3314,6 +3271,12 @@ $("btnExportJson").addEventListener("click", ()=>{
 $("importJson").addEventListener("change", async (e)=>{
   const f = e.target.files?.[0];
   if(!f) return;
+
+  if(NORMALIZED_SCHEMA_MODE){
+    toast("Legacy JSON import is disabled for the normalized Phase 3 schema.");
+    e.target.value = "";
+    return;
+  }
 
   if(!sb || !session?.user){
     openLogin();
@@ -3523,7 +3486,6 @@ if("serviceWorker" in navigator){
   // disable sign out / sync until configured
   if(!isConfigured()){
     $("btnSignOut").disabled = true;
-    $("btnSync").disabled = true;
   }
   setTab("leads");
   await initSupabase();

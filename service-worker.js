@@ -1,4 +1,4 @@
-const CACHE_NAME = "marel-houston-shell-v1";
+const CACHE_NAME = "marel-houston-shell-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -18,7 +18,11 @@ const APP_SHELL = [
   "./config/field-config.js",
   "./config/integrations-config.js",
   "./config/measurement-config.js",
-  "./js/config-loader.js"
+  "./js/config-loader.js",
+  "./js/data/crm-mappers.js",
+  "./js/data/mock-crm-repository.js",
+  "./js/data/supabase-crm-repository.js",
+  "./js/data/crm-data-service.js"
 ];
 
 self.addEventListener("install", event => {

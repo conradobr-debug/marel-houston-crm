@@ -424,11 +424,17 @@ upsertFromForm = async function(){
     payload.cadence_cycle = 1;
     payload.cadence_history = [...(existing?.cadence_history || []), {at:nowISO(), action:"activated", type:"Initial 90 Days", actor_id:session.user.id}];
   }
-  const {data,error} = await sb.from(TBL_RECORDS).update(payload).eq("id", id).select("*").single();
-  if(error){ console.error("[CRM Professional Partners] Could not save relationship fields.", error); toast("The record was saved, but the relationship fields require the current database migration."); return false; }
-  const index = records.findIndex(record=>record.id===id);
-  if(index>=0) records[index]=data;
-  return true;
+  try{
+    const current=records.find(record=>record.id===id) || existing;
+    const data=await crmData.updateRecord(current,payload);
+    const index=records.findIndex(record=>record.id===id);
+    if(index>=0 && data) records[index]=data;
+    return true;
+  }catch(error){
+    console.error("[CRM Professional Partners] Could not save relationship fields.",error);
+    toast("The core partner was saved, but some relationship fields could not be updated.");
+    return false;
+  }
 };
 
 const baseDatasetForTab = datasetForTab;
@@ -512,8 +518,8 @@ moveRecordToStage = async function(id, stage){
   const active = appointments.filter(item=>item.status==="scheduled").sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const first = active[0] || null;
   const patch = {stage,stage_entered_at:nowISO(),first_visit_at:record.first_visit_at||baseDate,cadence_active:true,cadence_type:"Initial 90 Days",cadence_started_at:baseDate,cadence_cycle:1,appointments,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,cadence_history:[...(record.cadence_history||[]),{at:nowISO(),action:"activated",type:"Initial 90 Days",actor_id:session.user.id}]};
-  const {error}=await sb.from(TBL_RECORDS).update(patch).eq("id",id);
-  if(error){console.error(error);return toast("Could not activate the cadence. Apply the current database migration.");}
+  try{ await crmData.updateRecord(record,patch); }
+  catch(error){console.error(error);return toast("Could not activate the local follow-up cadence.");}
   await fetchRecords({reason:"initial cadence",notifyNew:false});
   render();
   toast("Meeting logged and the 90-day cadence activated.");
@@ -521,7 +527,7 @@ moveRecordToStage = async function(id, stage){
 
 const baseRegisterContactNow = registerContactNow;
 registerContactNow = async function(record){
-  if(!record || !sb || !session?.user) return toast("Not signed in.");
+  if(!record || !session?.user) return toast("Not signed in.");
   if(!isSpecifier(record)) return baseRegisterContactNow(record);
   await partnerFetchContents();
   $("contactModal").dataset.recordId = record.id;
@@ -578,9 +584,11 @@ async function partnerSaveContact(){
   const first = scheduled.find(item=>new Date(item.starts_at)>=new Date()) || scheduled[0] || null;
   const payload = {interactions:[...(record.interactions||[]),interaction],sent_contents:sentContents,last_contact_at:at,appointments,stage,stage_entered_at:stage!==record.stage?nowISO():record.stage_entered_at,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,next_action_owner:first?.owner_id||record.owner_id,no_next_action_reason:first?null:reason,owner_id:$("contactOwner").value||record.owner_id};
   if(relatedId && PERMANENT_CADENCES[record.cadence_type]) payload.cadence_cycle=Number(record.cadence_cycle||0)+1;
-  const {data,error}=await sb.from(TBL_RECORDS).update(payload).eq("id",record.id).select("*").single();
-  if(error){console.error(error);return toast("Could not log activity.");}
-  records[records.findIndex(item=>item.id===record.id)] = data;
+  try{
+    const data=await crmData.updateRecord(record,payload);
+    await crmData.createActivity(record,{kind:"phone_call",subject:$('contactType').value.trim()||"Partner activity",details:summary,outcome:result,occurred_at:at});
+    records[records.findIndex(item=>item.id===record.id)] = data;
+  }catch(error){console.error(error);return toast("Could not log activity.");}
   await fetchRecordEvents();
   $("contactModal").close();
   if($("modal").open) closeModal();
@@ -589,10 +597,9 @@ async function partnerSaveContact(){
 }
 
 async function partnerFetchContents(){
-  if(!sb || !session?.user) return [];
-  const {data,error}=await sb.from(TBL_PARTNER_CONTENTS).select("*").order("registered_at",{ascending:false});
-  if(error){ console.warn("[CRM Professional Partners] Content library unavailable.", error); partnerContents=[]; return []; }
-  partnerContents=data||[];
+  if(!session?.user) return [];
+  try{ partnerContents=await crmData.listPartnerContents(); }
+  catch(error){ console.warn("[CRM Professional Partners] Content library unavailable.",error);partnerContents=[]; }
   return partnerContents;
 }
 async function partnerOpenContentBank(){
@@ -614,8 +621,9 @@ function partnerEditContent(id){
 async function partnerSaveContent(){
   const title=$("contentTitle").value.trim(); if(!title)return toast("Enter a content title.");
   const payload={title,pillar:$("contentPillar").value,format:$("contentFormat").value,description:$("contentDescription").value.trim()||null,external_url:$("contentUrl").value.trim()||null,tags:partnerCsv($("contentTags").value),status:$("contentStatus").value,notes:$("contentNotes").value.trim()||null,created_by:session.user.id};
-  const id=$("contentId").value; const query=id?sb.from(TBL_PARTNER_CONTENTS).update(payload).eq("id",id):sb.from(TBL_PARTNER_CONTENTS).insert(payload);
-  const {error}=await query; if(error){console.error(error);return toast("Could not save content. Verify the current database migration.");}
+  payload.id=$("contentId").value||undefined;
+  try{ await crmData.savePartnerContent(payload); }
+  catch(error){console.warn(error);return toast("Content library editing is outside the Phase 3 normalized adapter.");}
   await partnerFetchContents(); partnerClearContentForm(); partnerRenderContents(); toast("Content saved.");
 }
 
