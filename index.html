@@ -818,6 +818,8 @@
 const SUPABASE_URL = window.APP_CONFIG?.runtime?.supabaseUrl || "";
 const SUPABASE_ANON_KEY = window.APP_CONFIG?.runtime?.supabasePublishableKey || "";
 const CRM_WORKSPACE_ID = window.APP_CONFIG?.runtime?.workspaceId || "10000000-0000-4000-8000-000000000001";
+const CRM_RUNTIME_ENVIRONMENT = String(window.APP_CONFIG?.runtime?.environment || window.APP_CONFIG?.runtime?.crmEnvironment || "local").toLowerCase();
+const IS_PRODUCTION_RUNTIME = CRM_RUNTIME_ENVIRONMENT === "production";
 const crmData = window.MarelCRMData.service;
 
 /* ===== Pipelines ===== */
@@ -1130,13 +1132,19 @@ function setSyncConnectionState(state){
 function isConfigured(){
   try{
     const url = new URL(SUPABASE_URL);
-    return ["127.0.0.1","localhost"].includes(url.hostname) && SUPABASE_ANON_KEY.length > 20;
+    if(SUPABASE_ANON_KEY.length <= 20) return false;
+    if(IS_PRODUCTION_RUNTIME) return ["http:","https:"].includes(url.protocol);
+    return ["127.0.0.1","localhost"].includes(url.hostname);
   }catch(error){
     return false;
   }
 }
 function updateSessionLine(){
   const el = $("sessionLine");
+  if(IS_PRODUCTION_RUNTIME && !isConfigured()){
+    el.textContent = "Production configuration is missing. Add the Marel Supabase URL and publishable key before sign-in.";
+    return;
+  }
   if(crmData.mode === "mock"){
     el.textContent = "Synthetic offline fallback. Changes stay in this browser only.";
     return;
@@ -1757,7 +1765,7 @@ function renderCard(r){
 
 function renderPending(){
   renderKPIs([]);
-  return `<div class="empty">Service & Tasks remains a reserved workspace. Its normalized workflow is deferred to a later local phase.</div>`;
+  return `<div class="empty">Coming soon: Service & Tasks will stay limited until the commercial MVP is fully launched.</div>`;
 }
 
 function renderReports(){
@@ -2782,6 +2790,13 @@ if("serviceWorker" in navigator){
   // disable sign out / sync until configured
   if(!isConfigured()){
     $("btnSignOut").disabled = true;
+  }
+  if(IS_PRODUCTION_RUNTIME && !isConfigured()){
+    $("btnNew").disabled = true;
+    $("btnSync").disabled = true;
+    setAppDataState("error", "Production configuration missing", "Add the Marel Supabase URL and publishable key in config/runtime-config.js before sign-in.");
+    render();
+    return;
   }
   setTab("leads");
   await initSupabase();

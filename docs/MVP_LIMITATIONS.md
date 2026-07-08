@@ -1,12 +1,12 @@
 # Phase 1 limitations
 
-This repository now contains a local database and RLS foundation. It is not production-ready yet.
+This repository now contains a local database, RLS foundation, and a production-cutover-safe frontend. It still has deliberate MVP limits.
 
 ## Deliberately excluded
 
-- No real Supabase project or remote connection
-- No production credentials
-- No frontend queries against the normalized schema
+- No real Supabase project or remote connection in this workspace
+- No production credentials in tracked files
+- No frontend queries against the normalized schema outside the approved repository layer
 - No migration of legacy `crm_records` data
 - No Criare data, configuration, integrations, or history
 - No real Marel client data
@@ -18,17 +18,13 @@ This repository now contains a local database and RLS foundation. It is not prod
 ## Current technical limitations
 
 - A successful `supabase db reset` has not yet been executed on this machine because the Supabase CLI and a container runtime are not installed.
-- The frontend still expects the legacy monolithic table names.
-- Automated SQL and RLS tests are not included in Phase 1.
-- Role assignments are seeded only for local development.
-- Status vocabularies require business approval before production.
-- The project assumes one active Marel Houston workspace.
-- Cross-workspace foreign-key consistency is currently enforced by RLS and the single-workspace model, not by composite foreign keys.
-- File metadata and Storage policies exist, but no frontend upload flow is connected.
+- The Service & Tasks area is intentionally not a full production workflow yet.
+- Shared calendar sync is intentionally not implemented; next-action dates remain the CRM source of truth.
+- Future hosted Supabase deployment details, backups, monitoring, and recovery objectives still need final operational approval.
 - Hard deletion remains technically available to `admin`; production retention and archival rules are pending.
-- Legal contact, privacy retention, production region, hosting, backups, monitoring, and recovery objectives are pending.
 
 ## Safe offline behavior
 
-If Supabase is not configured, the frontend remains a read-only offline template. Phase 1 does not add local CRM persistence, offline mutation queues, or cached client data.
+If Supabase is not configured in a local or development environment, the frontend falls back to a synthetic browser-local repository.
 
+If production configuration is missing, the frontend now stops in a safe blocked state instead of silently switching to mock mode.

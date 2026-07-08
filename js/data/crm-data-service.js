@@ -14,12 +14,12 @@
   }
 
   function configure(options={}){
-    const configured=Boolean(options.supabaseClient && options.supabaseUrl?.startsWith("http://127.0.0.1"));
+    const configured=Boolean(options.supabaseClient && options.supabaseUrl);
     repository=configured
       ? api.createSupabaseRepository(options.supabaseClient,{workspaceId:options.workspaceId})
       : api.createMockRepository();
     api.repositoryContract.assertRepositoryContract(repository,`${repository.mode} repository`);
-    fallbackReason=configured?null:"Local Supabase is not configured.";
+    fallbackReason=configured?null:"Local or production Supabase is not configured.";
     return repository.mode;
   }
 

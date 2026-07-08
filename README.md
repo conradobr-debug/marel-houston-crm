@@ -22,9 +22,24 @@ The repository includes a local-only Supabase foundation under `supabase/`:
 
 No remote Supabase project is linked. Do not run `supabase link` or `supabase db push` during local development.
 
-The frontend compatibility adapter reads the normalized local schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes pass through the centralized data-access layer. An explicitly synthetic browser-local fallback remains available when local Supabase is not configured or cannot be reached.
+The frontend compatibility adapter reads the normalized schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes pass through the centralized data-access layer. A synthetic browser-local fallback remains available for local and development use only.
 
-Phase 4A removes executable legacy persistence paths, adds role-aware UI guardrails aligned with RLS, and provides a shared contract validation for the mock and Supabase repositories. Deployment and hosted Supabase remain out of scope.
+Phase 4A removes executable legacy persistence paths, adds role-aware UI guardrails aligned with RLS, and provides a shared contract validation for the mock and Supabase repositories.
+
+## Production MVP
+
+The production cutover keeps the UI intact while allowing a real Marel Supabase project to be configured through `config/runtime-config.js`.
+
+- `environment: "production"` enables hosted Supabase values.
+- If production configuration is missing, the app stops in a safe blocked state instead of silently switching to mock mode.
+- `config/runtime-config.js` stays ignored by Git and must never contain service-role credentials.
+- `service_role` must never be used in frontend code.
+
+See:
+
+- [`docs/PRODUCTION_SETUP.md`](docs/PRODUCTION_SETUP.md)
+- [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md)
+- [`docs/MVP_LIMITATIONS.md`](docs/MVP_LIMITATIONS.md)
 
 ## Local Supabase setup
 
