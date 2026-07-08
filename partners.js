@@ -224,6 +224,8 @@ function partnerDialogsMarkup(){
   <dialog id="contentBankModal" class="contentBankDialog"><div class="modalHd"><div><div class="modalTitle">Content library</div><div class="modalSub">Marel references for professional partner relationships.</div></div><button class="ghost" type="button" id="btnCloseContentBank">Close</button></div>
     <div class="modalBd contentBankLayout"><form id="contentForm" class="contentEditor"><input id="contentId" type="hidden" /><label>Title</label><input id="contentTitle" required /><label>Pillar</label><select id="contentPillar">${CONTENT_PILLARS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Format</label><select id="contentFormat">${CONTENT_FORMATS.map(v=>`<option>${escapeHtml(v)}</option>`).join("")}</select><label>Description</label><textarea id="contentDescription"></textarea><label>External link</label><input id="contentUrl" type="url" placeholder="Google Drive, website, Instagram, YouTube, or catalog" /><label>Tags</label><input id="contentTags" placeholder="Separate with commas" /><label>Status</label><select id="contentStatus"><option>Active</option><option>Archived</option></select><label>Internal notes</label><textarea id="contentNotes"></textarea><button class="primary" type="button" id="btnSaveContent">Save content</button><button class="ghost" type="button" id="btnNewContent">Clear form</button></form><div><div class="contentListTools"><input id="contentSearch" placeholder="Search content or tags" /><select id="contentStatusFilter"><option>Active</option><option>Archived</option><option>All</option></select></div><div id="contentList" class="contentList"></div></div></div></dialog>
 
+  <dialog id="cadenceActivationWarning" class="smallDecisionDialog"><div class="modalHd"><div class="modalTitle">Activate cadence?</div></div><div class="modalBd"><p>The partner has been moved to Intro Meeting. Activate the initial 90-day relationship cadence?</p></div><div class="modalFt"><button class="ghost" type="button" data-cadence-decision="cancel">Move without activating</button><button class="primary" type="button" data-cadence-decision="activate">Activate cadence</button></div></dialog>
+
   <dialog id="nextActionWarning" class="smallDecisionDialog"><div class="modalHd"><div class="modalTitle">Next action required</div></div><div class="modalBd"><p>This partner will have no scheduled follow-up. Save anyway?</p><div id="nextActionReasonWrap" hidden><label>Reason</label><textarea id="nextActionReason"></textarea></div></div><div class="modalFt"><button class="ghost" type="button" data-next-decision="cancel">Cancel</button><button class="ghost" type="button" data-next-decision="create">Create next action</button><button class="danger" type="button" data-next-decision="justify">Save with reason</button></div></dialog>`;
 }
 
@@ -323,6 +325,31 @@ function partnerAskNoNextAction(){
       resolve({decision, reason:$("nextActionReason").value.trim()});
     };
     dialog.addEventListener("click", handler);
+    dialog.showModal();
+  });
+}
+
+function partnerAskCadenceActivation(){
+  return new Promise(resolve=>{
+    const dialog = $("cadenceActivationWarning");
+    let settled = false;
+    const finish = decision=>{
+      if(settled) return;
+      settled = true;
+      dialog.removeEventListener("close", onClose);
+      dialog.removeEventListener("click", onClick);
+      resolve(decision);
+    };
+    const onClose = ()=>finish(false);
+    const onClick = event=>{
+      const button = event.target.closest("[data-cadence-decision]");
+      if(!button) return;
+      event.preventDefault();
+      finish(button.dataset.cadenceDecision === "activate");
+      dialog.close();
+    };
+    dialog.addEventListener("close", onClose);
+    dialog.addEventListener("click", onClick);
     dialog.showModal();
   });
 }
@@ -517,14 +544,18 @@ const baseMoveRecordToStage = moveRecordToStage;
 moveRecordToStage = async function(id, stage){
   const record = records.find(item=>item.id===id);
   if(!record || !isSpecifier(record) || stage!=="Intro Meeting" || record.cadence_active) return baseMoveRecordToStage(id, stage);
-  const activate = confirm("Activate the initial 90-day relationship cadence?\n\nOK: activate • Cancel: move without activating");
-  if(!activate) return baseMoveRecordToStage(id, stage);
+  await baseMoveRecordToStage(id, stage);
+  const moved = records.find(item=>item.id===id);
+  if(!moved || moved.stage !== stage) return;
+  const activate = await partnerAskCadenceActivation();
+  if(!activate) return;
+  const current = records.find(item=>item.id===id) || moved;
   const baseDate = nowISO();
-  const appointments = [...normalizeAppointments(record), ...partnerCreateInitialCadence(record, baseDate, record.partner_classification || "Unclassified", record.owner_id)];
+  const appointments = [...normalizeAppointments(current), ...partnerCreateInitialCadence(current, baseDate, current.partner_classification || "Unclassified", current.owner_id)];
   const active = appointments.filter(item=>item.status==="scheduled").sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const first = active[0] || null;
-  const patch = {stage,stage_entered_at:nowISO(),first_visit_at:record.first_visit_at||baseDate,cadence_active:true,cadence_type:"Initial 90 Days",cadence_started_at:baseDate,cadence_cycle:1,appointments,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,cadence_history:[...(record.cadence_history||[]),{at:nowISO(),action:"activated",type:"Initial 90 Days",actor_id:session.user.id}]};
-  try{ await crmData.updateRecord(record,patch); }
+  const patch = {stage,stage_entered_at:nowISO(),first_visit_at:current.first_visit_at||baseDate,cadence_active:true,cadence_type:"Initial 90 Days",cadence_started_at:baseDate,cadence_cycle:1,appointments,next_action_at:first?.starts_at||null,next_action:first?inputDateValue(new Date(first.starts_at)):null,next_action_kind:first?.kind||null,next_action_details:first?.details||null,cadence_history:[...(current.cadence_history||[]),{at:nowISO(),action:"activated",type:"Initial 90 Days",actor_id:session.user.id}]};
+  try{ await crmData.updateRecord(current,patch); }
   catch(error){console.error(error);return toast("Could not activate the local follow-up cadence.");}
   await fetchRecords({reason:"initial cadence",notifyNew:false});
   render();
