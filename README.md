@@ -47,7 +47,7 @@ See:
 This repository can be published as a static site from the `main` branch root folder.
 
 - Recommended repository name: `marel-houston-crm`
-- Recommended Pages URL: `https://conradoevangelista.github.io/marel-houston-crm/`
+- Recommended Pages URL: `https://conradobr-debug.github.io/marel-houston-crm/`
 - GitHub Pages should load the browser-safe `config/runtime-config.js` file from the repo
 - That runtime file may include only browser-safe values:
   - Marel Supabase URL
