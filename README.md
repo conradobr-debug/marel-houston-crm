@@ -32,7 +32,8 @@ The production cutover keeps the UI intact while allowing a real Marel Supabase 
 
 - `environment: "production"` enables hosted Supabase values.
 - If production configuration is missing, the app stops in a safe blocked state instead of silently switching to mock mode.
-- `config/runtime-config.js` stays ignored by Git and must never contain service-role credentials.
+- `config/runtime-config.js` must never contain service-role credentials.
+- For GitHub Pages, the browser-safe production `config/runtime-config.js` is committed so the static site can boot without any server-side injection.
 - `service_role` must never be used in frontend code.
 
 See:
@@ -40,6 +41,21 @@ See:
 - [`docs/PRODUCTION_SETUP.md`](docs/PRODUCTION_SETUP.md)
 - [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md)
 - [`docs/MVP_LIMITATIONS.md`](docs/MVP_LIMITATIONS.md)
+
+## GitHub Pages deployment
+
+This repository can be published as a static site from the `main` branch root folder.
+
+- Recommended repository name: `marel-houston-crm`
+- Recommended Pages URL: `https://conradoevangelista.github.io/marel-houston-crm/`
+- GitHub Pages should load the browser-safe `config/runtime-config.js` file from the repo
+- That runtime file may include only browser-safe values:
+  - Marel Supabase URL
+  - Marel publishable key
+  - Marel workspace id
+  - final public URL
+
+RLS remains the security boundary. The publishable key is safe to ship in the browser only because the Supabase policies already restrict access to the Marel workspace.
 
 ## Local Supabase setup
 

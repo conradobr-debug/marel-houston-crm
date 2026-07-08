@@ -51,6 +51,9 @@ Use this checklist right before launch.
 ## Deployment
 
 - Static hosting points at the correct CRM build
+- GitHub Pages is configured for the `main` branch root folder
+- The published site URL is `https://conradoevangelista.github.io/marel-houston-crm/`
+- The repo includes a browser-safe `config/runtime-config.js` for the live site
 - Browser cache has been refreshed after the latest release
 - The app loads over HTTPS in production
 - Smoke tests passed from the deployed URL
