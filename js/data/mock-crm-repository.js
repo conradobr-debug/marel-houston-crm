@@ -98,6 +98,7 @@
         if(record.client_photo_url) URL.revokeObjectURL(record.client_photo_url);
         Object.assign(record,{client_photo_path:null,client_photo_mime_type:null,client_photo_size_bytes:null,client_photo_url:null,updated_at:now()}); save(); return clone(record);
       },
+      async syncCalendar(existing){ const record=find(existing?.id||existing); if(!record) throw new Error("Record not found."); record.calendar_sync_status="not_synced"; save(); return clone(record); },
       async subscribe(){ return async()=>{}; },
       async listPartnerContents(){ return []; },
       async savePartnerContent(){ throw new Error("Content library is unavailable in offline mode."); }

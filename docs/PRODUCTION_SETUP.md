@@ -8,7 +8,7 @@ This document covers the safest manual cutover for a real Marel Supabase project
 - Real Supabase Auth users for Conrado, Wilson, and Fabiola
 - Production profile loading and role checks
 - Manual shared iCloud Calendar workflow
-- No WhatsApp, Outlook, Google Calendar, CalDAV, or lead-intake automations
+- No WhatsApp, Outlook, Apple/CalDAV, inbound calendar, or lead-intake automations
 
 ## Before you start
 

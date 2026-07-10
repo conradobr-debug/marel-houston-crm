@@ -43,9 +43,9 @@ Use this checklist right before launch.
 
 ## Calendar workflow
 
-- Shared iCloud Calendar exists
-- Conrado, Wilson, and Fabiola are invited
-- Next actions are entered manually in the calendar when needed
+- Shared Google Calendar `Marel Houston CRM` exists
+- Conrado, Wilson, and Fabiola are invited and can add it to Apple Calendar
+- Google OAuth secrets are configured only for Supabase Edge Functions
 - The CRM remains the source of truth for CRM follow-up dates
 
 ## Deployment

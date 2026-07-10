@@ -11,7 +11,7 @@ This repository now contains a local database, RLS foundation, and a production-
 - No Criare data, configuration, integrations, or history
 - No real Marel client data
 - No WhatsApp functionality
-- No Outlook or calendar integration
+- No Outlook, Apple/CalDAV, inbound, or two-way calendar integration
 - No email automation
 - No automated lead intake or webhooks
 
@@ -19,7 +19,7 @@ This repository now contains a local database, RLS foundation, and a production-
 
 - A successful `supabase db reset` has not yet been executed on this machine because the Supabase CLI and a container runtime are not installed.
 - The Service & Tasks area is intentionally not a full production workflow yet.
-- Shared calendar sync is intentionally not implemented; next-action dates remain the CRM source of truth.
+- Shared Google Calendar sync is CRM-to-calendar only; inbound and two-way sync are deferred.
 - Client photos are manual uploads only. The CRM does not collect photos from social profiles, perform facial recognition, or analyze biometric information.
 - The client-photo bucket uses short-lived signed URLs. Users need an active session and a network connection to view uploaded photos.
 - Future hosted Supabase deployment details, backups, monitoring, and recovery objectives still need final operational approval.

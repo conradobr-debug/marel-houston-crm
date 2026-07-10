@@ -37,7 +37,8 @@
       starts_at:task.due_at,
       kind:task.title || "Follow-Up",
       details:task.details || null,
-      duration_minutes:30,
+      location:task.appointment_location || null,
+      duration_minutes:task.appointment_duration_minutes || 30,
       reminder_minutes:30,
       status:"scheduled",
       owner_id:task.assigned_to || null
@@ -49,6 +50,11 @@
       next_action_kind:task.title || null,
       next_action_details:task.details || null,
       next_action_owner:task.assigned_to || null,
+      appointment_location:task.appointment_location || null,
+      calendar_sync_status:task.calendar_sync_status || "not_synced",
+      calendar_synced_at:task.calendar_synced_at || null,
+      calendar_sync_error:task.calendar_sync_error || null,
+      external_calendar_event_id:task.external_calendar_event_id || null,
       _task_id:task.id
     };
   }

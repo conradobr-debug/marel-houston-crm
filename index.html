@@ -700,12 +700,20 @@
           <label>Appointment details</label>
           <textarea id="nextActionDetails" placeholder="Example: confirm receipt of plans, review the brief, and schedule the presentation."></textarea>
         </div>
+        <div class="col-6">
+          <label>Location</label>
+          <input id="appointmentLocation" placeholder="Optional location" />
+        </div>
 
         <div class="col-12" style="display:flex;justify-content:flex-end">
           <button class="primary" id="btnAddAppointment" type="button">+ Add appointment</button>
         </div>
 
         <div class="appointmentList" id="appointmentList"></div>
+        <div class="col-12" id="calendarSyncPanel">
+          <span class="fieldHelp" id="calendarSyncStatus">Not synced</span>
+          <button type="button" class="ghost" id="btnSyncCalendar">Sync to calendar</button>
+        </div>
         </div>
 
         <div class="col-4" id="wrapLeadQuality">
@@ -2317,6 +2325,7 @@ function clearAppointmentComposer(){
   $("nextActionDuration").value = "30";
   $("nextActionReminder").value = "30";
   $("nextActionDetails").value = "";
+  $("appointmentLocation").value = "";
 }
 function appointmentFromComposer(){
   const date = $("nextAction").value;
@@ -2329,6 +2338,7 @@ function appointmentFromComposer(){
     details:$("nextActionDetails").value.trim() || null,
     duration_minutes:Number($("nextActionDuration").value || 30),
     reminder_minutes:Number($("nextActionReminder").value || 30),
+    location:$("appointmentLocation").value.trim() || null,
     status:"scheduled"
   };
 }
@@ -2445,6 +2455,7 @@ function openModal(record=null, options={}){
   $("form").querySelectorAll("input:not([type='hidden']), select, textarea").forEach(field=>{field.disabled=!canEdit;});
   $("clientPhotoInput").disabled=!canEdit || kind === "specifier";
   configureClientPhotoInteraction(record,{editable:canEdit,kind});
+  updateCalendarSyncPanel(record,canEdit);
   $("btnAddAppointment").disabled=!canEdit;
   $("btnSave").style.display=canEdit ? "" : "none";
   $("btnQuickClosed").style.display=canQuick && !isNew && canMarkWon(record) ? "" : "none";
@@ -2461,6 +2472,14 @@ function openModal(record=null, options={}){
   }
 }
 function closeModal(){ clearPendingClientPhoto(); $("modal").close(); currentEditingId=null; }
+
+function updateCalendarSyncPanel(record,canEdit){
+  const status=record?.calendar_sync_status || "not_synced";
+  const labels={not_synced:"Not synced",pending:"Pending",synced:"Synced",failed:"Failed"};
+  $("calendarSyncStatus").textContent=labels[status] || "Not synced";
+  $("btnSyncCalendar").style.display=record?._task_id && canEdit ? "" : "none";
+  $("btnSyncCalendar").disabled=!canEdit || status === "pending";
+}
 
 async function upsertFromForm(){
   if(!session?.user) { toast("Not signed in."); return false; }
@@ -2711,6 +2730,23 @@ $("pipeline").addEventListener("change", ()=>{
 });
 $("stage").addEventListener("change", updateLostReasonVisibility);
 $("btnAddAppointment").addEventListener("click", ()=>addAppointmentFromComposer());
+$("btnSyncCalendar").addEventListener("click", async ()=>{
+  const record=records.find(item=>item.id===currentEditingId);
+  if(!record?._task_id || !canEditRecord(record)) return;
+  $("btnSyncCalendar").disabled=true;
+  $("calendarSyncStatus").textContent="Pending";
+  try{
+    const updated=await crmData.syncCalendar(record,"sync");
+    const index=records.findIndex(item=>item.id===record.id);
+    if(index>=0) records[index]=updated;
+    updateCalendarSyncPanel(updated,true);
+    toast("Synced to Marel Houston CRM calendar.");
+  }catch(error){
+    console.error("[CRM Calendar] Synchronization failed.",error);
+    $("calendarSyncStatus").textContent="Failed";
+    toast("Could not sync to the shared calendar.");
+  }
+});
 $("clientPhotoTrigger").addEventListener("click", ()=>{
   const record=records.find(item=>item.id===currentEditingId);
   if(!record ? !canCreateInTab() : !canEditRecord(record)) return;

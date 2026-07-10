@@ -5,7 +5,7 @@
   const methods=Object.freeze([
     "getSession","onAuthStateChange","signIn","signOut","listProfiles","getSettings","saveSettings",
     "listRecords","listEvents","createRecord","updateRecord","updateStage","markClosed","markLost",
-    "deleteRecord","createActivity","uploadClientPhoto","removeClientPhoto","subscribe","listPartnerContents","savePartnerContent"
+    "deleteRecord","createActivity","uploadClientPhoto","removeClientPhoto","syncCalendar","subscribe","listPartnerContents","savePartnerContent"
   ]);
 
   function assertRepositoryContract(repository,label="repository"){

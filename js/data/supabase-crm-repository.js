@@ -62,20 +62,37 @@
     async function syncTask(record,userId){
       const scheduled=(record.appointments||[]).filter(item=>item.status!=="completed"&&item.starts_at).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at))[0];
       const dueAt=scheduled?.starts_at || record.next_action_at || null;
-      if(!dueAt) return;
+      if(!dueAt){
+        if(record._task_id){
+          if(record.external_calendar_event_id) await syncCalendar(record,"delete");
+          await checked(client.from("tasks").update({status:"canceled",due_at:null}).eq("id",record._task_id).select("id").single());
+        }
+        return;
+      }
       const payload={
         title:scheduled?.kind || record.next_action_kind || "Follow-Up",
         details:scheduled?.details || record.next_action_details || null,
         due_at:dueAt,
         assigned_to:scheduled?.owner_id || record.next_action_owner || record.owner_id || userId,
+        appointment_location:scheduled?.location || record.appointment_location || null,
+        appointment_duration_minutes:Number(scheduled?.duration_minutes || record.next_action_duration_minutes || 30),
         priority:"normal"
       };
       if(record._task_id){
         await checked(client.from("tasks").update(payload).eq("id",record._task_id).select("id").single());
+        if(record.calendar_sync_status === "synced") await syncCalendar(record,"sync");
       }else{
         const data=await checked(client.from("tasks").insert({workspace_id:workspaceId,...mappers.relatedPayload(record),...payload,created_by:userId}).select("id").single());
         record._task_id=data.id;
       }
+    }
+
+    async function syncCalendar(record,operation="sync"){
+      if(!record?._task_id) throw new Error("Save an appointment before syncing it to the shared calendar.");
+      const {data,error}=await client.functions.invoke("calendar-sync",{body:{task_id:record._task_id,operation}});
+      if(error) throw error;
+      if(data?.error) throw new Error(data.error);
+      return hydrateByIdentity(record.id);
     }
 
     async function hydrateByIdentity(identity){
@@ -275,7 +292,7 @@
       async listProfiles(){ return checked(client.from("profiles").select("id,display_name,role,is_active").order("display_name",{ascending:true})); },
       async getSettings(){ const data=await checked(client.from("crm_settings").select("lead_sources,lost_reasons").eq("workspace_id",workspaceId).maybeSingle());return {sources:data?.lead_sources||[],lost_reasons:data?.lost_reasons||[]}; },
       async saveSettings(settings){ await checked(client.from("crm_settings").update({lead_sources:settings.sources,lost_reasons:settings.lost_reasons}).eq("workspace_id",workspaceId));return settings; },
-      listRecords,listEvents,createRecord,updateRecord,updateStage,markClosed,markLost,deleteRecord,createActivity,uploadClientPhoto,removeClientPhoto,subscribe,
+      listRecords,listEvents,createRecord,updateRecord,updateStage,markClosed,markLost,deleteRecord,createActivity,uploadClientPhoto,removeClientPhoto,syncCalendar,subscribe,
       async listPartnerContents(){ return []; },
       async savePartnerContent(){ throw new Error("Partner content library is not part of the normalized Phase 3 schema."); }
     };
