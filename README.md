@@ -18,6 +18,7 @@ The repository includes a local-only Supabase foundation under `supabase/`:
 - workspace-aware RLS policies for five application roles;
 - immutable audit and status-history triggers;
 - a private local file bucket;
+- a private client-photo bucket with signed URL access and ownership-aware Storage policies;
 - deterministic synthetic seed data.
 
 No remote Supabase project is linked. Do not run `supabase link` or `supabase db push` during local development.
@@ -25,6 +26,12 @@ No remote Supabase project is linked. Do not run `supabase link` or `supabase db
 The frontend compatibility adapter reads the normalized schema while preserving the existing card and form interface. Leads, partners, opportunities, projects, profiles, settings, notes, tasks, activities, and stage changes pass through the centralized data-access layer. A synthetic browser-local fallback remains available for local and development use only.
 
 Phase 4A removes executable legacy persistence paths, adds role-aware UI guardrails aligned with RLS, and provides a shared contract validation for the mock and Supabase repositories.
+
+## Client photos
+
+Leads and customer records can use a manually uploaded client photo. The browser accepts JPG, PNG, and WebP images up to 5 MB, compresses supported images before upload, and stores only a private Storage path plus MIME type and size metadata in `public.leads`.
+
+`marel-client-photos` is private. The UI uses short-lived signed URLs and retains initials when no image is available. RLS controls access: viewers remain read-only; sales users may change only owned or created leads; sales managers and administrators follow the existing commercial rules. Never upload a photo without authorization to use it.
 
 ## Production MVP
 

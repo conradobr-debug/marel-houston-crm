@@ -20,6 +20,8 @@ This repository now contains a local database, RLS foundation, and a production-
 - A successful `supabase db reset` has not yet been executed on this machine because the Supabase CLI and a container runtime are not installed.
 - The Service & Tasks area is intentionally not a full production workflow yet.
 - Shared calendar sync is intentionally not implemented; next-action dates remain the CRM source of truth.
+- Client photos are manual uploads only. The CRM does not collect photos from social profiles, perform facial recognition, or analyze biometric information.
+- The client-photo bucket uses short-lived signed URLs. Users need an active session and a network connection to view uploaded photos.
 - Future hosted Supabase deployment details, backups, monitoring, and recovery objectives still need final operational approval.
 - Hard deletion remains technically available to `admin`; production retention and archival rules are pending.
 

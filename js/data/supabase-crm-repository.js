@@ -5,6 +5,7 @@
     if(!client) throw new Error("A Supabase client is required.");
     const mappers = global.MarelCRMData.mappers;
     const workspaceId = options.workspaceId || mappers.WORKSPACE_ID;
+    const PHOTO_BUCKET = "marel-client-photos";
     const checked = async promise=>{
       const result = await promise;
       if(result.error) throw result.error;
@@ -34,7 +35,17 @@
     }
 
     async function listRecords(){
-      return mappers.composeRecords(await loadNormalized());
+      const records=mappers.composeRecords(await loadNormalized());
+      await Promise.all(records.filter(record=>record.client_photo_path).map(async record=>{
+        try{
+          const data=await checked(client.storage.from(PHOTO_BUCKET).createSignedUrl(record.client_photo_path, 900));
+          record.client_photo_url=data?.signedUrl || null;
+        }catch(error){
+          console.warn("[CRM Data] Could not create a signed client-photo URL.",error);
+          record.client_photo_url=null;
+        }
+      }));
+      return records;
     }
 
     async function syncNote(record,userId){
@@ -177,6 +188,49 @@
       return checked(client.from("activities").insert(payload).select("id").single());
     }
 
+    function leadIdFor(record){
+      const leadId=record?._lead_id || (record?._entity_type === "lead" ? record.id : null);
+      if(!leadId) throw new Error("Client photos are available for lead and customer records only.");
+      return leadId;
+    }
+
+    async function uploadClientPhoto(record,file){
+      await currentUser();
+      if(!(file instanceof Blob)) throw new Error("Choose a valid image file.");
+      const leadId=leadIdFor(record);
+      const extension=file.type === "image/webp" ? "webp" : (file.type === "image/png" ? "png" : "jpg");
+      const objectPath=`${workspaceId}/leads/${leadId}/photo.${extension}`;
+      await checked(client.storage.from(PHOTO_BUCKET).upload(objectPath,file,{upsert:true,contentType:file.type,cacheControl:"3600"}));
+      try{
+        await checked(client.from("leads").update({
+          client_photo_path:objectPath,
+          client_photo_mime_type:file.type,
+          client_photo_size_bytes:file.size
+        }).eq("id",leadId).select("id").single());
+      }catch(error){
+        await client.storage.from(PHOTO_BUCKET).remove([objectPath]);
+        throw error;
+      }
+      if(record.client_photo_path && record.client_photo_path !== objectPath){
+        try{ await checked(client.storage.from(PHOTO_BUCKET).remove([record.client_photo_path])); }
+        catch(error){ console.warn("[CRM Data] The previous client photo could not be removed.",error); }
+      }
+      return hydrateByIdentity(record.id);
+    }
+
+    async function removeClientPhoto(record){
+      await currentUser();
+      const leadId=leadIdFor(record);
+      const existingPath=record.client_photo_path;
+      await checked(client.from("leads").update({
+        client_photo_path:null,
+        client_photo_mime_type:null,
+        client_photo_size_bytes:null
+      }).eq("id",leadId).select("id").single());
+      if(existingPath) await checked(client.storage.from(PHOTO_BUCKET).remove([existingPath]));
+      return hydrateByIdentity(record.id);
+    }
+
     async function listEvents(){
       const [history,activities]=await Promise.all([
         checked(client.from("status_history").select("*").order("changed_at",{ascending:false}).limit(1500)),
@@ -221,7 +275,7 @@
       async listProfiles(){ return checked(client.from("profiles").select("id,display_name,role,is_active").order("display_name",{ascending:true})); },
       async getSettings(){ const data=await checked(client.from("crm_settings").select("lead_sources,lost_reasons").eq("workspace_id",workspaceId).maybeSingle());return {sources:data?.lead_sources||[],lost_reasons:data?.lost_reasons||[]}; },
       async saveSettings(settings){ await checked(client.from("crm_settings").update({lead_sources:settings.sources,lost_reasons:settings.lost_reasons}).eq("workspace_id",workspaceId));return settings; },
-      listRecords,listEvents,createRecord,updateRecord,updateStage,markClosed,markLost,deleteRecord,createActivity,subscribe,
+      listRecords,listEvents,createRecord,updateRecord,updateStage,markClosed,markLost,deleteRecord,createActivity,uploadClientPhoto,removeClientPhoto,subscribe,
       async listPartnerContents(){ return []; },
       async savePartnerContent(){ throw new Error("Partner content library is not part of the normalized Phase 3 schema."); }
     };

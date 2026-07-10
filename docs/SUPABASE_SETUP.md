@@ -32,7 +32,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
   -f supabase/tests/database/rls_policies.test.sql
 ```
 
-A passing run reports `ok 1` through `ok 27`, no `not ok` lines, and finishes with `ROLLBACK`. The URL and password above are Supabase's standard local-development defaults only; do not reuse them for a hosted project.
+A passing run reports `ok 1` through `ok 37`, no `not ok` lines, and finishes with `ROLLBACK`. The URL and password above are Supabase's standard local-development defaults only; do not reuse them for a hosted project.
 
 ## Start the Phase 3 frontend
 
@@ -73,3 +73,15 @@ Use `supabase db reset` whenever migrations or seed data change. A successful re
 If the CLI version generates a different PostgreSQL major version than `supabase/config.toml`, update the local configuration in a dedicated review before starting the stack.
 
 The frontend is not connected to this schema in Phase 1. The existing application remains in safe offline-template mode.
+
+## Client photos
+
+Migration `20260710090000_client_photos.sql` creates the private `marel-client-photos` bucket and lead metadata columns. Client-photo objects use:
+
+```
+<workspace_id>/leads/<lead_id>/photo.webp
+```
+
+Modern browsers resize and compress supported uploads to WebP. A browser without WebP canvas export retains the validated JPG or PNG extension. The bucket remains private in every case; the app requests short-lived signed URLs after RLS authorizes the record.
+
+Only JPG, PNG, and WebP files up to 5 MB may enter Storage. Do not upload a photo unless the Marel team has the right to use it. The application does not collect images from social networks, perform facial recognition, or process biometric data.

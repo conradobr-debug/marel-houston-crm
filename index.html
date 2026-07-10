@@ -213,6 +213,11 @@
     .customerIdentity{display:flex;align-items:center;gap:9px;min-width:0}
     .customerAvatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;object-fit:cover;border:1px solid rgba(18,35,52,.18);background:#fff}
     .customerAvatarFallback{display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)}
+    .clientPhotoControl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid #DCE8EA;border-radius:12px;background:#FFFFFF;}
+    .clientPhotoPreview{width:58px;height:58px;flex:0 0 58px;border-radius:50%;object-fit:cover;border:1px solid #DCE8EA;background:#F6FBFC;}
+    .clientPhotoFallback{display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--muted);}
+    .clientPhotoActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .clientPhotoActions input{max-width:250px;padding:7px;}
     .cName{font-weight:700; font-size:14px; letter-spacing:.2px; line-height:1.15;}
     .rightTop{display:flex; gap:8px; align-items:center}
 
@@ -572,6 +577,21 @@
       <form class="form" id="form" autocomplete="off">
         <input type="hidden" id="id" />
         <input type="hidden" id="recordType" value="lead" />
+
+        <div class="col-12" id="wrapClientPhoto">
+          <label>Client photo</label>
+          <div class="clientPhotoControl">
+            <img id="clientPhotoPreview" class="clientPhotoPreview" alt="Client profile" hidden />
+            <span id="clientPhotoFallback" class="clientPhotoPreview clientPhotoFallback" aria-hidden="true">?</span>
+            <div>
+              <div class="clientPhotoActions">
+                <input id="clientPhotoInput" type="file" accept="image/jpeg,image/png,image/webp" />
+                <button type="button" class="ghost" id="btnRemoveClientPhoto">Remove photo</button>
+              </div>
+              <div class="fieldHelp">JPG, PNG, or WebP only. Maximum input size: 5 MB. Images are resized for secure private storage.</div>
+            </div>
+          </div>
+        </div>
 
         <div class="col-3">
           <label>First name <span class="req">*</span></label>
@@ -1059,6 +1079,64 @@ const filters = { owner:"All", source:"All", city:"", search:"" };
 let isDragging = false;
 let justDraggedAt = 0;
 let currentEditingId = null;
+let pendingClientPhoto = null;
+let pendingClientPhotoPreviewUrl = null;
+const CLIENT_PHOTO_INPUT_LIMIT = 5 * 1024 * 1024;
+const CLIENT_PHOTO_OUTPUT_LIMIT = 1024 * 1024;
+const CLIENT_PHOTO_MAX_DIMENSION = 1200;
+
+function clientPhotoInitials(record){
+  return `${record?.first_name?.[0] || ""}${record?.last_name?.[0] || ""}`.toUpperCase() || "?";
+}
+
+function clearPendingClientPhoto(){
+  pendingClientPhoto=null;
+  if(pendingClientPhotoPreviewUrl){ URL.revokeObjectURL(pendingClientPhotoPreviewUrl); pendingClientPhotoPreviewUrl=null; }
+  if($("clientPhotoInput")) $("clientPhotoInput").value="";
+}
+
+function setClientPhotoPreview(record, previewUrl=null){
+  const image=$("clientPhotoPreview");
+  const fallback=$("clientPhotoFallback");
+  const url=previewUrl || record?.client_photo_url || null;
+  if(url){ image.src=url; image.hidden=false; fallback.hidden=true; }
+  else { image.hidden=true; image.removeAttribute("src"); fallback.textContent=clientPhotoInitials(record); fallback.hidden=false; }
+}
+
+function canvasBlob(canvas,type,quality){
+  return new Promise(resolve=>canvas.toBlob(resolve,type,quality));
+}
+
+async function prepareClientPhoto(file){
+  const accepted=["image/jpeg","image/png","image/webp"];
+  if(!file || !accepted.includes(file.type)) throw new Error("Choose a JPG, PNG, or WebP image.");
+  if(file.size > CLIENT_PHOTO_INPUT_LIMIT) throw new Error("The image must be 5 MB or smaller.");
+  if(typeof createImageBitmap !== "function" || typeof document.createElement !== "function") return file;
+  const bitmap=await createImageBitmap(file);
+  const scale=Math.min(1,CLIENT_PHOTO_MAX_DIMENSION / Math.max(bitmap.width,bitmap.height));
+  const width=Math.max(1,Math.round(bitmap.width * scale));
+  const height=Math.max(1,Math.round(bitmap.height * scale));
+  const canvas=document.createElement("canvas");
+  canvas.width=width; canvas.height=height;
+  canvas.getContext("2d",{alpha:false}).drawImage(bitmap,0,0,width,height);
+  bitmap.close?.();
+  const compressed=await canvasBlob(canvas,"image/webp",0.82);
+  if(compressed?.type === "image/webp"){
+    if(compressed.size > CLIENT_PHOTO_OUTPUT_LIMIT) throw new Error("The processed image is too large. Choose a smaller image.");
+    return new File([compressed],"client-photo.webp",{type:"image/webp"});
+  }
+  return file;
+}
+
+async function persistPendingClientPhoto(record){
+  if(!pendingClientPhoto) return record;
+  const updated=await crmData.uploadClientPhoto(record,pendingClientPhoto);
+  clearPendingClientPhoto();
+  const index=records.findIndex(item=>item.id===updated.id || item.id===record.id);
+  if(index>=0) records[index]=updated;
+  else records.unshift(updated);
+  return updated;
+}
 let appointmentDrafts = [];
 
 let config = { sources: DEFAULT_SOURCES.slice(), lost_reasons: DEFAULT_LOST_REASONS.slice() };
@@ -1709,7 +1787,9 @@ function renderKPIs(scope){
 function renderCard(r){
   const name = fullName(r);
   const initials = `${r.first_name?.[0] || ""}${r.last_name?.[0] || ""}`.toUpperCase() || "?";
-  const avatar = `<span class="customerAvatar customerAvatarFallback" aria-hidden="true">${escapeHtml(initials)}</span>`;
+  const avatar = r.client_photo_url
+    ? `<img class="customerAvatar" src="${escapeHtml(r.client_photo_url)}" alt="${escapeHtml(name)}" />`
+    : `<span class="customerAvatar customerAvatarFallback" aria-hidden="true">${escapeHtml(initials)}</span>`;
   let st = r.stage || (r.pipeline==="lead" ? LEAD_STAGES[0] : CLOSED_STAGES[0]);
   if(r.pipeline==="lead") st = normalizeLeadStage(st); else st = normalizeClosedStage(st);
   const age = stageAge(r);
@@ -2278,14 +2358,18 @@ function openModal(record=null, options={}){
   const isNew = !record;
   const kind = record ? recordType(record) : (currentTab === "specifiers" ? "specifier" : "lead");
   currentEditingId = record?.id || null;
+  clearPendingClientPhoto();
   $("recordType").value = kind;
   $("modalTitle").textContent = isNew
     ? (kind === "specifier" ? "New partner" : (currentTab==="closed" ? "New project" : "New lead"))
     : (kind === "specifier" ? "Partner details" : "Customer details");
 
   $("id").value = record?.id || "";
-  $("modalCustomerAvatar").hidden = true;
-  $("modalCustomerAvatar").removeAttribute("src");
+  const modalAvatar=$("modalCustomerAvatar");
+  if(record?.client_photo_url){ modalAvatar.src=record.client_photo_url; modalAvatar.hidden=false; }
+  else { modalAvatar.hidden=true; modalAvatar.removeAttribute("src"); }
+  $("wrapClientPhoto").style.display = kind === "specifier" ? "none" : "";
+  setClientPhotoPreview(record);
   $("firstName").value = record?.first_name || "";
   $("lastName").value = record?.last_name || "";
   $("phone").value = record?.phone || "";
@@ -2327,6 +2411,9 @@ function openModal(record=null, options={}){
   const canQuick = (kind !== "specifier" && pipeline==="lead" && st !== "Lost");
   const canEdit=isNew ? canCreateInTab() : canEditRecord(record);
   $("form").querySelectorAll("input:not([type='hidden']), select, textarea").forEach(field=>{field.disabled=!canEdit;});
+  $("clientPhotoInput").disabled=!canEdit || kind === "specifier";
+  $("btnRemoveClientPhoto").style.display=!isNew && kind !== "specifier" && record?.client_photo_path && canEdit ? "" : "none";
+  $("btnRemoveClientPhoto").disabled=!canEdit;
   $("btnAddAppointment").disabled=!canEdit;
   $("btnSave").style.display=canEdit ? "" : "none";
   $("btnQuickClosed").style.display=canQuick && !isNew && canMarkWon(record) ? "" : "none";
@@ -2342,7 +2429,7 @@ function openModal(record=null, options={}){
     setTimeout(()=>$("nextAction").focus(), 50);
   }
 }
-function closeModal(){ $("modal").close(); currentEditingId=null; }
+function closeModal(){ clearPendingClientPhoto(); $("modal").close(); currentEditingId=null; }
 
 async function upsertFromForm(){
   if(!session?.user) { toast("Not signed in."); return false; }
@@ -2429,7 +2516,7 @@ async function upsertFromForm(){
       if(!data) throw new Error("The repository returned no record.");
       records.unshift(data);
       $("id").value = data.id;
-      return true;
+      return data;
     }catch(error){
       console.error("[CRM Data] Create failed:", error);
       toast("Could not create the record.");
@@ -2442,7 +2529,7 @@ async function upsertFromForm(){
       if(!data) throw new Error("The repository returned no record.");
       const idx = records.findIndex(r=>r.id===data.id || r.id===id);
       if(idx>=0) records[idx]=data; else records.unshift(data);
-      return true;
+      return data;
     }catch(error){
       console.error("[CRM Data] Update failed:", error);
       toast("Could not update the record.");
@@ -2593,6 +2680,42 @@ $("pipeline").addEventListener("change", ()=>{
 });
 $("stage").addEventListener("change", updateLostReasonVisibility);
 $("btnAddAppointment").addEventListener("click", ()=>addAppointmentFromComposer());
+$("clientPhotoInput").addEventListener("change", async event=>{
+  const file=event.target.files?.[0];
+  if(!file) return;
+  try{
+    const prepared=await prepareClientPhoto(file);
+    clearPendingClientPhoto();
+    pendingClientPhoto=prepared;
+    pendingClientPhotoPreviewUrl=URL.createObjectURL(prepared);
+    setClientPhotoPreview(records.find(record=>record.id===currentEditingId),pendingClientPhotoPreviewUrl);
+    toast("Client photo is ready to save.");
+  }catch(error){
+    console.warn("[CRM Photo] Image validation failed.",error);
+    clearPendingClientPhoto();
+    setClientPhotoPreview(records.find(record=>record.id===currentEditingId));
+    toast(error.message || "Could not prepare the client photo.");
+  }
+});
+$("btnRemoveClientPhoto").addEventListener("click", async ()=>{
+  const record=records.find(item=>item.id===currentEditingId);
+  if(!record || !record.client_photo_path || !canEditRecord(record)) return;
+  if(!confirm("Remove this client photo?")) return;
+  try{
+    const updated=await crmData.removeClientPhoto(record);
+    const index=records.findIndex(item=>item.id===record.id);
+    if(index>=0) records[index]=updated;
+    $("modalCustomerAvatar").hidden=true;
+    $("modalCustomerAvatar").removeAttribute("src");
+    setClientPhotoPreview(updated);
+    $("btnRemoveClientPhoto").style.display="none";
+    render();
+    toast("Client photo removed.");
+  }catch(error){
+    console.error("[CRM Photo] Could not remove client photo.",error);
+    toast("Could not remove the client photo.");
+  }
+});
 $("appointmentList").addEventListener("click", event=>{
   const button = event.target.closest("[data-remove-appointment]");
   if(!button) return;
@@ -2602,7 +2725,16 @@ $("appointmentList").addEventListener("click", event=>{
 });
 $("btnSave").addEventListener("click", async (e)=>{
   e.preventDefault();
-  if(await upsertFromForm()){
+  const saved=await upsertFromForm();
+  if(saved){
+    try{
+      const withPhoto=await persistPendingClientPhoto(saved);
+      const avatar=$("modalCustomerAvatar");
+      if(withPhoto.client_photo_url){ avatar.src=withPhoto.client_photo_url; avatar.hidden=false; }
+    }catch(error){
+      console.error("[CRM Photo] Record saved but photo upload failed.",error);
+      toast("The record was saved, but the client photo could not be uploaded.");
+    }
     toast("Saved.");
     closeModal();
     render();

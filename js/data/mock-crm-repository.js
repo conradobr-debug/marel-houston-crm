@@ -82,6 +82,22 @@
       async markLost(existing,reason){ const id=existing?.id||existing;const record=find(id);if(!record) throw new Error("Record not found.");record.pipeline="lead";record.stage="Lost";record.lost_reason=reason||"Other";record.updated_at=now();save();return clone(record); },
       async deleteRecord(existing){ const id=existing?.id||existing;state.records=state.records.filter(record=>record.id!==id);save();return true; },
       async createActivity(record,details={}){ state.events.unshift({id:uuid(),record_id:record.id,event_type:"contact_logged",metadata:details,occurred_at:now()});save();return true; },
+      async uploadClientPhoto(existing,file){
+        const record=find(existing?.id||existing); if(!record) throw new Error("Record not found.");
+        if(record._entity_type === "partner") throw new Error("Client photos are available for lead and customer records only.");
+        if(!(file instanceof Blob)) throw new Error("Choose a valid image file.");
+        if(record.client_photo_url) URL.revokeObjectURL(record.client_photo_url);
+        record.client_photo_path=`mock/leads/${record._lead_id||record.id}/photo.${file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : "jpg"}`;
+        record.client_photo_mime_type=file.type;
+        record.client_photo_size_bytes=file.size;
+        record.client_photo_url=URL.createObjectURL(file);
+        record.updated_at=now(); save(); return clone(record);
+      },
+      async removeClientPhoto(existing){
+        const record=find(existing?.id||existing); if(!record) throw new Error("Record not found.");
+        if(record.client_photo_url) URL.revokeObjectURL(record.client_photo_url);
+        Object.assign(record,{client_photo_path:null,client_photo_mime_type:null,client_photo_size_bytes:null,client_photo_url:null,updated_at:now()}); save(); return clone(record);
+      },
       async subscribe(){ return async()=>{}; },
       async listPartnerContents(){ return []; },
       async savePartnerContent(){ throw new Error("Content library is unavailable in offline mode."); }

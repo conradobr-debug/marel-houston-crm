@@ -74,6 +74,9 @@
       created_at:lead.created_at,
       updated_at:lead.updated_at,
       created_by:lead.created_by,
+      client_photo_path:lead.client_photo_path || null,
+      client_photo_mime_type:lead.client_photo_mime_type || null,
+      client_photo_size_bytes:lead.client_photo_size_bytes == null ? null : Number(lead.client_photo_size_bytes),
       _lead_id:lead.id,
       _note_id:note?.id || null,
       ...taskFields(task)
@@ -232,6 +235,9 @@
       has_floor_plan:record.has_floor_plan == null ? null : Boolean(record.has_floor_plan),
       investment_profile:record.investment_profile || null,
       decision_due_on:record.decision_due_at || null,
+      client_photo_path:record.client_photo_path || null,
+      client_photo_mime_type:record.client_photo_mime_type || null,
+      client_photo_size_bytes:record.client_photo_size_bytes == null ? null : Number(record.client_photo_size_bytes),
       created_by:userId
     });
   }

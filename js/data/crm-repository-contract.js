@@ -5,7 +5,7 @@
   const methods=Object.freeze([
     "getSession","onAuthStateChange","signIn","signOut","listProfiles","getSettings","saveSettings",
     "listRecords","listEvents","createRecord","updateRecord","updateStage","markClosed","markLost",
-    "deleteRecord","createActivity","subscribe","listPartnerContents","savePartnerContent"
+    "deleteRecord","createActivity","uploadClientPhoto","removeClientPhoto","subscribe","listPartnerContents","savePartnerContent"
   ]);
 
   function assertRepositoryContract(repository,label="repository"){
@@ -50,6 +50,19 @@
       let loaded=(await repository.listRecords()).find(record=>record.id===lead.id);
       expect(loaded?.notes==="Synthetic repository contract note.",`${label}: lead note did not round-trip.`);
       expect(Boolean(loaded?.next_action_at),`${label}: lead next action did not round-trip.`);
+      const photo=new File([new Uint8Array([82,73,70,70,22,0,0,0,87,69,66,80,86,80,56,32,10,0,0,0,1,0,1,0,0,0])],"contract-photo.webp",{type:"image/webp"});
+      loaded=await repository.uploadClientPhoto(loaded,photo);
+      expect(Boolean(loaded?.client_photo_path),`${label}: client photo path did not save.`);
+      const photoReloaded=(await repository.listRecords()).find(record=>record.id===lead.id);
+      expect(Boolean(photoReloaded?.client_photo_url),`${label}: client photo signed URL did not regenerate.`);
+      const replacementPhoto=new File([new Uint8Array([137,80,78,71,13,10,26,10])],"replacement-photo.png",{type:"image/png"});
+      loaded=await repository.uploadClientPhoto(photoReloaded,replacementPhoto);
+      expect(loaded?.client_photo_path?.endsWith("/photo.png"),`${label}: client photo replacement did not save.`);
+      const jpegReplacement=new File([new Uint8Array([255,216,255,217])],"replacement-photo.jpg",{type:"image/jpeg"});
+      loaded=await repository.uploadClientPhoto(loaded,jpegReplacement);
+      expect(loaded?.client_photo_path?.endsWith("/photo.jpg"),`${label}: JPEG client photo replacement did not save.`);
+      loaded=await repository.removeClientPhoto(loaded);
+      expect(!loaded?.client_photo_path,`${label}: client photo did not remove.`);
       loaded=await repository.updateRecord(loaded,{last_name:"Lead Updated"});
       expect(loaded?.last_name==="Lead Updated",`${label}: lead edit failed.`);
       loaded=await repository.updateStage(loaded,"Proposal Ready");

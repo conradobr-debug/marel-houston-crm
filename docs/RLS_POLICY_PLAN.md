@@ -18,6 +18,8 @@ The private schema contains security-definer functions with an empty search path
 - `private.current_role()`
 - `private.is_active_workspace_member(uuid)`
 - `private.has_any_role(crm_app_role[])`
+- `private.can_manage_lead_photo_path(text)`
+- `private.can_view_lead_photo_path(text)`
 
 The `private` schema is not exposed through the Data API. Authenticated users receive execute permission only for the listed authorization helpers.
 
@@ -50,7 +52,16 @@ The local migration creates a private `marel-crm-files` bucket.
 - Delete access is initially limited to `admin` and `project_manager`.
 - No bucket is public.
 
+### Client photos
+
+`marel-client-photos` is a separate private bucket. Its object path must match `<workspace_id>/leads/<lead_id>/photo.<jpg|png|webp>`.
+
+- All active workspace members may read a photo when it is linked by `leads.client_photo_path`; the frontend receives a short-lived signed URL rather than a public URL. The authorized owner or manager may also read their own path during an atomic upload/replace operation.
+- `admin` and `sales_manager` can upload, replace, or remove photos for workspace leads.
+- `sales_user` can do so only when they own the lead or created it.
+- `viewer` has no Storage write policy.
+- The Storage policies and private helper functions verify workspace, role, and lead identity. Browser UI controls are convenience guardrails only.
+
 ## Required Phase 2 tests
 
 RLS tests must impersonate `anon` and each authenticated role. Tests must cover `SELECT`, `INSERT`, `UPDATE`, and `DELETE` against every table, ownership changes, inactive users, cross-workspace identifiers, audit immutability, and Storage access.
-

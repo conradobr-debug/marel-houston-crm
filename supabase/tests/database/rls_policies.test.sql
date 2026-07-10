@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(27);
+select plan(37);
 
 -- Test-only second workspace and member. Everything in this file is rolled back.
 insert into public.crm_workspaces (id, slug, name, market, timezone)
@@ -308,7 +308,120 @@ select throws_ok(
   'storage insert rejects a different workspace path'
 );
 
+-- Client photos use a separate private bucket with ownership-aware paths.
+select lives_ok(
+  $$
+    update public.leads
+    set client_photo_path = '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000002/photo.webp',
+        client_photo_mime_type = 'image/webp',
+        client_photo_size_bytes = 1024
+    where id = '30000000-0000-4000-8000-000000000002'
+  $$,
+  'sales user can attach photo metadata to an owned lead'
+);
+select lives_ok(
+  $$
+    insert into storage.objects (bucket_id, name, owner_id)
+    values (
+      'marel-client-photos',
+      '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000002/photo.webp',
+      '20000000-0000-4000-8000-000000000003'
+    )
+  $$,
+  'sales user can upload a client photo for an owned lead'
+);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'marel-client-photos'),
+  1::bigint,
+  'authorized workspace member can read linked private client photos'
+);
+select throws_ok(
+  $$
+    insert into storage.objects (bucket_id, name, owner_id)
+    values (
+      'marel-client-photos',
+      '10000000-0000-4000-8000-000000000002/leads/30000000-0000-4000-8000-000000000002/photo.webp',
+      '20000000-0000-4000-8000-000000000003'
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "objects"',
+  'client photo upload rejects another workspace path'
+);
+select is_empty(
+  $$
+    update public.leads
+    set client_photo_path = '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000003/photo.webp'
+    where id = '30000000-0000-4000-8000-000000000003'
+    returning id
+  $$,
+  'sales user cannot attach photo metadata to another owner lead'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000005', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'marel-client-photos'),
+  1::bigint,
+  'viewer can read a linked client photo'
+);
+select throws_ok(
+  $$
+    insert into storage.objects (bucket_id, name, owner_id)
+    values (
+      'marel-client-photos',
+      '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000001/photo.webp',
+      '20000000-0000-4000-8000-000000000005'
+    )
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "objects"',
+  'viewer cannot upload a client photo'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000099', true);
+select is(
+  (select count(*) from storage.objects where bucket_id = 'marel-client-photos'),
+  0::bigint,
+  'other workspace member cannot read Marel client photos'
+);
+reset role;
+
 -- Status and audit triggers retain actor and transition context.
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000002', true);
+select lives_ok(
+  $$
+    update public.leads
+    set client_photo_path = '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000001/photo.jpg',
+        client_photo_mime_type = 'image/jpeg',
+        client_photo_size_bytes = 2048
+    where id = '30000000-0000-4000-8000-000000000001';
+    insert into storage.objects (bucket_id, name, owner_id)
+    values (
+      'marel-client-photos',
+      '10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000001/photo.jpg',
+      '20000000-0000-4000-8000-000000000002'
+    )
+  $$,
+  'sales manager can upload a client photo for a workspace lead'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000001', true);
+select is(
+  private.can_manage_lead_photo_path('10000000-0000-4000-8000-000000000001/leads/30000000-0000-4000-8000-000000000001/photo.jpg'),
+  true,
+  'admin is authorized to remove a workspace client photo through the Storage API'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '20000000-0000-4000-8000-000000000003', true);
 select lives_ok(
   $$update public.leads set stage = 'Proposal Presented' where id = '30000000-0000-4000-8000-000000000002'$$,
   'sales user can change the stage of an owned lead'

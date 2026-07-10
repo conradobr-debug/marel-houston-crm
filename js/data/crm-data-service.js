@@ -59,6 +59,8 @@
     markLost:(record,reason)=>withFallback("markLost",[record,reason],false),
     deleteRecord:record=>withFallback("deleteRecord",[record],false),
     createActivity:(record,details)=>withFallback("createActivity",[record,details],false),
+    uploadClientPhoto:(record,file)=>withFallback("uploadClientPhoto",[record,file],false),
+    removeClientPhoto:record=>withFallback("removeClientPhoto",[record],false),
     subscribe:(onChange,onStatus)=>withFallback("subscribe",[onChange,onStatus]),
     listPartnerContents:()=>withFallback("listPartnerContents"),
     savePartnerContent:content=>withFallback("savePartnerContent",[content],false)
