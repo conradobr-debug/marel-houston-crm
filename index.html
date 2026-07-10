@@ -213,11 +213,19 @@
     .customerIdentity{display:flex;align-items:center;gap:9px;min-width:0}
     .customerAvatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;object-fit:cover;border:1px solid rgba(18,35,52,.18);background:#fff}
     .customerAvatarFallback{display:grid;place-items:center;font-size:10px;font-weight:700;color:var(--muted)}
-    .clientPhotoControl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid #DCE8EA;border-radius:12px;background:#FFFFFF;}
-    .clientPhotoPreview{width:58px;height:58px;flex:0 0 58px;border-radius:50%;object-fit:cover;border:1px solid #DCE8EA;background:#F6FBFC;}
+    .clientPhotoControl{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:7px;}
+    .clientPhotoTrigger{width:64px;height:64px;padding:0;display:grid;place-items:center;border-radius:50%;overflow:hidden;border:1px solid #D3CCC3;background:#F6FBFC;cursor:pointer;}
+    .clientPhotoTrigger:not(:disabled):hover{border-color:#8D8378;background:#FFFFFF;}
+    .clientPhotoTrigger:not(:disabled):focus-visible{outline:2px solid #171717;outline-offset:3px;}
+    .clientPhotoTrigger:disabled{cursor:default;opacity:1;}
+    .clientPhotoPreview{width:64px;height:64px;display:block;border-radius:50%;object-fit:cover;background:#F6FBFC;}
     .clientPhotoFallback{display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--muted);}
-    .clientPhotoActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-    .clientPhotoActions input{max-width:250px;padding:7px;}
+    .clientPhotoHint{font-size:10px;color:var(--muted);white-space:nowrap;}
+    .clientPhotoMenu{position:absolute;z-index:10;top:72px;left:50%;min-width:148px;padding:5px;background:#FFFFFF;border:1px solid #D3CCC3;box-shadow:var(--shadow);transform:translateX(-50%);}
+    .clientPhotoMenu button{display:block;width:100%;padding:8px 10px;border:0;background:transparent;text-align:left;font-size:12px;}
+    .clientPhotoMenu button:hover,.clientPhotoMenu button:focus-visible{background:#F3F0EC;outline:0;}
+    .clientPhotoMenu .dangerMenuItem{color:var(--danger);}
+    .visuallyHidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;}
     .cName{font-weight:700; font-size:14px; letter-spacing:.2px; line-height:1.15;}
     .rightTop{display:flex; gap:8px; align-items:center}
 
@@ -579,17 +587,17 @@
         <input type="hidden" id="recordType" value="lead" />
 
         <div class="col-12" id="wrapClientPhoto">
-          <label>Client photo</label>
           <div class="clientPhotoControl">
-            <img id="clientPhotoPreview" class="clientPhotoPreview" alt="Client profile" hidden />
-            <span id="clientPhotoFallback" class="clientPhotoPreview clientPhotoFallback" aria-hidden="true">?</span>
-            <div>
-              <div class="clientPhotoActions">
-                <input id="clientPhotoInput" type="file" accept="image/jpeg,image/png,image/webp" />
-                <button type="button" class="ghost" id="btnRemoveClientPhoto">Remove photo</button>
-              </div>
-              <div class="fieldHelp">JPG, PNG, or WebP only. Maximum input size: 5 MB. Images are resized for secure private storage.</div>
+            <button type="button" class="clientPhotoTrigger" id="clientPhotoTrigger" aria-label="Add client photo">
+              <img id="clientPhotoPreview" class="clientPhotoPreview" alt="Client profile" hidden />
+              <span id="clientPhotoFallback" class="clientPhotoPreview clientPhotoFallback" aria-hidden="true">?</span>
+            </button>
+            <input id="clientPhotoInput" class="visuallyHidden" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose a client photo" />
+            <div id="clientPhotoMenu" class="clientPhotoMenu" role="menu" hidden>
+              <button type="button" id="btnReplaceClientPhoto" role="menuitem">Replace photo</button>
+              <button type="button" id="btnRemoveClientPhoto" class="dangerMenuItem" role="menuitem">Remove photo</button>
             </div>
+            <div id="clientPhotoHint" class="clientPhotoHint">Click photo to change</div>
           </div>
         </div>
 
@@ -1101,6 +1109,30 @@ function setClientPhotoPreview(record, previewUrl=null){
   const url=previewUrl || record?.client_photo_url || null;
   if(url){ image.src=url; image.hidden=false; fallback.hidden=true; }
   else { image.hidden=true; image.removeAttribute("src"); fallback.textContent=clientPhotoInitials(record); fallback.hidden=false; }
+}
+
+function closeClientPhotoMenu(){
+  const menu=$("clientPhotoMenu");
+  menu.hidden=true;
+  $("clientPhotoTrigger").setAttribute("aria-expanded","false");
+}
+
+function configureClientPhotoInteraction(record,{editable=false,kind="lead"}={}){
+  const trigger=$("clientPhotoTrigger");
+  const menu=$("clientPhotoMenu");
+  const hasPhoto=Boolean(record?.client_photo_path);
+  const canChange=editable && kind !== "specifier";
+  trigger.disabled=!canChange;
+  trigger.setAttribute("aria-label",hasPhoto ? "Change client photo" : "Add client photo");
+  trigger.setAttribute("aria-haspopup",hasPhoto && canChange ? "menu" : "false");
+  trigger.setAttribute("aria-expanded","false");
+  $("clientPhotoHint").hidden=!canChange;
+  menu.hidden=true;
+}
+
+function openClientPhotoPicker(){
+  closeClientPhotoMenu();
+  $("clientPhotoInput").click();
 }
 
 function canvasBlob(canvas,type,quality){
@@ -2412,8 +2444,7 @@ function openModal(record=null, options={}){
   const canEdit=isNew ? canCreateInTab() : canEditRecord(record);
   $("form").querySelectorAll("input:not([type='hidden']), select, textarea").forEach(field=>{field.disabled=!canEdit;});
   $("clientPhotoInput").disabled=!canEdit || kind === "specifier";
-  $("btnRemoveClientPhoto").style.display=!isNew && kind !== "specifier" && record?.client_photo_path && canEdit ? "" : "none";
-  $("btnRemoveClientPhoto").disabled=!canEdit;
+  configureClientPhotoInteraction(record,{editable:canEdit,kind});
   $("btnAddAppointment").disabled=!canEdit;
   $("btnSave").style.display=canEdit ? "" : "none";
   $("btnQuickClosed").style.display=canQuick && !isNew && canMarkWon(record) ? "" : "none";
@@ -2680,6 +2711,18 @@ $("pipeline").addEventListener("change", ()=>{
 });
 $("stage").addEventListener("change", updateLostReasonVisibility);
 $("btnAddAppointment").addEventListener("click", ()=>addAppointmentFromComposer());
+$("clientPhotoTrigger").addEventListener("click", ()=>{
+  const record=records.find(item=>item.id===currentEditingId);
+  if(!record ? !canCreateInTab() : !canEditRecord(record)) return;
+  if(record?.client_photo_path){
+    const menu=$("clientPhotoMenu");
+    menu.hidden=!menu.hidden;
+    $("clientPhotoTrigger").setAttribute("aria-expanded",String(!menu.hidden));
+  }else{
+    openClientPhotoPicker();
+  }
+});
+$("btnReplaceClientPhoto").addEventListener("click", openClientPhotoPicker);
 $("clientPhotoInput").addEventListener("change", async event=>{
   const file=event.target.files?.[0];
   if(!file) return;
@@ -2700,6 +2743,7 @@ $("clientPhotoInput").addEventListener("change", async event=>{
 $("btnRemoveClientPhoto").addEventListener("click", async ()=>{
   const record=records.find(item=>item.id===currentEditingId);
   if(!record || !record.client_photo_path || !canEditRecord(record)) return;
+  closeClientPhotoMenu();
   if(!confirm("Remove this client photo?")) return;
   try{
     const updated=await crmData.removeClientPhoto(record);
@@ -2708,13 +2752,20 @@ $("btnRemoveClientPhoto").addEventListener("click", async ()=>{
     $("modalCustomerAvatar").hidden=true;
     $("modalCustomerAvatar").removeAttribute("src");
     setClientPhotoPreview(updated);
-    $("btnRemoveClientPhoto").style.display="none";
+    configureClientPhotoInteraction(updated,{editable:true,kind:"lead"});
     render();
     toast("Client photo removed.");
   }catch(error){
     console.error("[CRM Photo] Could not remove client photo.",error);
     toast("Could not remove the client photo.");
   }
+});
+document.addEventListener("keydown", event=>{
+  if(event.key !== "Escape" || $("clientPhotoMenu").hidden) return;
+  event.preventDefault();
+  event.stopPropagation();
+  closeClientPhotoMenu();
+  $("clientPhotoTrigger").focus();
 });
 $("appointmentList").addEventListener("click", event=>{
   const button = event.target.closest("[data-remove-appointment]");
