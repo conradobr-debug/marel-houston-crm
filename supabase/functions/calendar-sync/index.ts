@@ -32,8 +32,12 @@ Deno.serve(async request => {
     const admin = createClient(url, serviceKey);
     const { task_id, operation = "sync" } = await request.json();
     if (!task_id || !["sync", "delete"].includes(operation)) return json({ error: "A valid task and operation are required." }, 400);
-    const { data: profile } = await admin.from("profiles").select("workspace_id,role,is_active").eq("id", user.id).maybeSingle();
-    const { data: task } = await admin.from("tasks").select("*").eq("id", task_id).maybeSingle();
+    // Resolve the caller's access in the authenticated context. This keeps the
+    // authorization decision aligned with the CRM's RLS policies before using
+    // the server-side client for the approved calendar write.
+    const { data: profile, error: profileError } = await userClient.from("profiles").select("workspace_id,role,is_active").eq("id", user.id).maybeSingle();
+    const { data: task, error: taskError } = await userClient.from("tasks").select("*").eq("id", task_id).maybeSingle();
+    if (profileError || taskError) throw new Error("Calendar authorization lookup failed.");
     if (!profile?.is_active || !task || task.workspace_id !== profile.workspace_id) return json({ error: "Calendar access is not authorized." }, 403);
     const canSync = ["admin", "sales_manager"].includes(profile.role) ||
       (profile.role === "sales_user" && (task.created_by === user.id || task.assigned_to === user.id)) ||
