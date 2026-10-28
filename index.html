@@ -539,31 +539,58 @@
     <div class="modalHd">
       <div>
         <div class="modalTitle">Sign in</div>
-        <div class="modalSub">Use the email and password created in Supabase Auth.</div>
+        <div class="modalSub">Use your Marel Houston account.</div>
       </div>
       <button class="ghost" id="btnCloseLogin" hidden>Close</button>
     </div>
     <div class="modalBd">
       <div class="loginGrid">
         <div>
-          <label>Email</label>
+          <label for="loginEmail">Email</label>
           <input id="loginEmail" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="name@company.com" />
         </div>
         <div>
-          <label>Password</label>
+          <label for="loginPass">Password</label>
           <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
         </div>
-        <div class="note" id="loginNote">
-          If sign-in fails, confirm that the user exists in Supabase Auth and that the Marel project is active.
+        <div class="note" id="loginNote" role="status" aria-live="polite">
+          Enter your email and password. If you need a new password, select Forgot password?.
         </div>
       </div>
     </div>
     <div class="modalFt">
-      <div class="note">For an internal team, disable public sign-ups and create approved users manually in Supabase.</div>
+      <div class="note">Need access? Contact your Marel CRM administrator.</div>
       <div class="loginActions">
+        <button class="ghost" id="btnForgotPassword" type="button">Forgot password?</button>
         <button class="primary" id="btnLogin">Sign in</button>
       </div>
     </div>
+  </dialog>
+
+  <dialog id="passwordResetModal" aria-labelledby="passwordResetTitle">
+    <form id="passwordResetForm">
+      <div class="modalHd">
+        <div>
+          <div class="modalTitle" id="passwordResetTitle">Set a new password</div>
+          <div class="modalSub" id="passwordResetEmail"></div>
+        </div>
+      </div>
+      <div class="modalBd loginGrid">
+        <div>
+          <label for="resetPassword">New password</label>
+          <input id="resetPassword" type="password" autocomplete="new-password" required minlength="8" />
+        </div>
+        <div>
+          <label for="resetPasswordConfirm">Confirm new password</label>
+          <input id="resetPasswordConfirm" type="password" autocomplete="new-password" required minlength="8" />
+        </div>
+        <div class="note" id="passwordResetNote" role="status" aria-live="polite">Use at least 8 characters. After saving, sign in with your new password.</div>
+      </div>
+      <div class="modalFt">
+        <button class="ghost" type="button" id="btnCancelPasswordReset">Back to sign in</button>
+        <button class="primary" type="submit" id="btnSavePassword">Save new password</button>
+      </div>
+    </form>
   </dialog>
 
   <!-- Details modal -->
@@ -1247,6 +1274,126 @@ function setSyncConnectionState(state){
 }
 
 /* ===== Auth + Init ===== */
+const authReturnHash = new URLSearchParams(window.location.hash.slice(1));
+const authReturnQuery = new URLSearchParams(window.location.search);
+let passwordRecoveryPending = authReturnHash.get("type") === "recovery";
+let passwordResetBusy = false;
+let authReturnError = Boolean(authReturnHash.get("error") || authReturnQuery.get("error") || authReturnHash.get("error_code") || authReturnQuery.get("error_code"));
+
+function clearAuthReturnError(){
+  if(!authReturnError) return;
+  const cleanUrl = new URL(window.location.href);
+  for(const key of ["error","error_code","error_description"]){
+    cleanUrl.searchParams.delete(key);
+    authReturnHash.delete(key);
+  }
+  cleanUrl.searchParams.delete("code");
+  cleanUrl.hash = "";
+  window.history.replaceState(null,"",cleanUrl);
+  authReturnError = false;
+}
+function showRecoveryError(){
+  passwordRecoveryPending = false;
+  if($("passwordResetModal").open) $("passwordResetModal").close();
+  clearAuthReturnError();
+  render();
+  openLogin();
+  $("loginNote").textContent = "This recovery link is invalid, expired, or already used. Enter your email and select Forgot password? to request a new one. Open only the newest email link.";
+}
+function openPasswordReset(){
+  if(!session?.user) return showRecoveryError();
+  if($("loginModal").open) $("loginModal").close();
+  $("passwordResetEmail").textContent = `Account: ${session.user.email}`;
+  if(!$("passwordResetModal").open){
+    $("btnSavePassword").disabled = false;
+    $("resetPassword").value = "";
+    $("resetPasswordConfirm").value = "";
+    $("passwordResetNote").textContent = "Use at least 8 characters. After saving, sign in with your new password.";
+    $("passwordResetModal").showModal();
+  }
+}
+async function requestPasswordReset(){
+  const email = $("loginEmail").value.trim();
+  if(!email || !$("loginEmail").checkValidity()){
+    $("loginNote").textContent = "Enter your email above, then select Forgot password?.";
+    $("loginEmail").focus();
+    return;
+  }
+  if(crmData.mode !== "supabase"){
+    $("loginNote").textContent = "Password recovery requires a connection to the Marel CRM.";
+    return;
+  }
+  const button = $("btnForgotPassword");
+  button.disabled = true;
+  try{
+    const redirect = new URL(window.location.href);
+    redirect.search = "";
+    redirect.hash = "";
+    await crmData.requestPasswordReset(email,redirect.href);
+    $("loginNote").textContent = "If this email has an account, a recovery link has been sent. Check your inbox and spam, and open only the newest link.";
+  }catch(error){
+    $("loginNote").textContent = error?.status === 429
+      ? "Too many recovery requests. Please wait before requesting another email."
+      : "Could not send the recovery email. Please try again later or contact your CRM administrator.";
+  }finally{
+    button.disabled = false;
+  }
+}
+async function saveRecoveryPassword(){
+  if(passwordResetBusy) return;
+  const password = $("resetPassword").value;
+  const confirmation = $("resetPasswordConfirm").value;
+  const note = $("passwordResetNote");
+  if(!passwordRecoveryPending || !session?.user) return showRecoveryError();
+  if(password.length < 8){ note.textContent = "Use at least 8 characters."; return; }
+  if(password !== confirmation){ note.textContent = "The passwords do not match."; return; }
+  passwordResetBusy = true;
+  $("btnSavePassword").disabled = true;
+  $("btnCancelPasswordReset").disabled = true;
+  let saved = false;
+  try{
+    await crmData.updatePassword(password);
+    saved = true;
+    $("resetPassword").value = "";
+    $("resetPasswordConfirm").value = "";
+    await crmData.signOut();
+    session = null;
+    passwordRecoveryPending = false;
+    $("passwordResetModal").close();
+    lockApp();
+    openLogin();
+    $("loginPass").value = "";
+    $("loginNote").textContent = "Password saved. Sign in with your new password.";
+  }catch(error){
+    note.textContent = saved
+      ? "Your password was saved, but sign-out could not finish. Select Back to sign in, or close this tab and sign in again."
+      : error?.code === "weak_password"
+        ? "Choose a stronger password with letters, numbers, and symbols."
+        : "Could not save your password. Try again, or request a new recovery link if this one expired.";
+  }finally{
+    passwordResetBusy = false;
+    $("btnSavePassword").disabled = saved;
+    $("btnCancelPasswordReset").disabled = false;
+  }
+}
+async function cancelPasswordReset(){
+  if(passwordResetBusy) return;
+  try{
+    passwordResetBusy = true;
+    await crmData.signOut();
+    session = null;
+    passwordRecoveryPending = false;
+    $("resetPassword").value = "";
+    $("resetPasswordConfirm").value = "";
+    $("passwordResetModal").close();
+    lockApp();
+    openLogin();
+  }catch(error){
+    $("passwordResetNote").textContent = "Could not sign out. Try again or close this tab.";
+  }finally{
+    passwordResetBusy = false;
+  }
+}
 function isConfigured(){
   try{
     const url = new URL(SUPABASE_URL);
@@ -1277,17 +1424,22 @@ async function initSupabase(){
   setAppDataState("loading", "Loading your data", "Connecting to the local Marel workspace…");
   sb = isConfigured() ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   crmData.configure({supabaseClient:sb,supabaseUrl:SUPABASE_URL,workspaceId:CRM_WORKSPACE_ID});
+  // Subscribe before getSession resolves, so recovery events cannot be missed.
+  crmData.onAuthStateChange((event,newSession)=>handleAuthStateChange(event,newSession));
   try{
     session = await crmData.getSession();
   }catch(error){
-    console.error("[CRM Auth] Could not restore the local session.", error);
+    console.warn("[CRM Auth] Could not restore the session.");
+    if(passwordRecoveryPending) authReturnError = true;
     setAppDataState("auth", "Sign-in required", "Sign in with a synthetic local Marel user.");
   }
   updateSessionLine();
 
-  crmData.onAuthStateChange((event,newSession)=>handleAuthStateChange(event,newSession));
-
-  if(!session?.user){
+  if(authReturnError){
+    showRecoveryError();
+  }else if(passwordRecoveryPending){
+    openPasswordReset();
+  }else if(!session?.user){
     setAppDataState("auth", "Sign-in required", "Sign in with an authorized Marel user to load the workspace.");
     render();
     openLogin();
@@ -1301,6 +1453,11 @@ async function handleAuthStateChange(event, newSession){
   session = newSession;
   updateSessionLine();
   console.info("[CRM Auth] State changed.", { event, authenticated: Boolean(session?.user) });
+
+  if(passwordResetBusy) return;
+  if(authReturnError) return showRecoveryError();
+  if(event === "PASSWORD_RECOVERY") passwordRecoveryPending = true;
+  if(passwordRecoveryPending) return openPasswordReset();
 
   if(!session?.user){
     bootedUserId = null;
@@ -2862,6 +3019,10 @@ $("btnQuickDelete").addEventListener("click", async (e)=>{
 
 /* Login events */
 $("btnLogin").addEventListener("click", (e)=>{ e.preventDefault(); doLogin(); });
+$("btnForgotPassword").addEventListener("click", requestPasswordReset);
+$("passwordResetForm").addEventListener("submit", (e)=>{ e.preventDefault(); saveRecoveryPassword(); });
+$("btnCancelPasswordReset").addEventListener("click", cancelPasswordReset);
+$("passwordResetModal").addEventListener("cancel", (e)=>{ e.preventDefault(); cancelPasswordReset(); });
 $("btnCloseLogin").addEventListener("click", closeLogin);
 $("loginModal").addEventListener("cancel", event=>{
   if(!session?.user) event.preventDefault();

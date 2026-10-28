@@ -3,7 +3,7 @@
 
   const api=global.MarelCRMData=global.MarelCRMData||{};
   const methods=Object.freeze([
-    "getSession","onAuthStateChange","signIn","signOut","listProfiles","getSettings","saveSettings",
+    "getSession","onAuthStateChange","signIn","signOut","requestPasswordReset","updatePassword","listProfiles","getSettings","saveSettings",
     "listRecords","listEvents","createRecord","updateRecord","updateStage","markClosed","markLost",
     "deleteRecord","createActivity","uploadClientPhoto","removeClientPhoto","syncCalendar","subscribe","listPartnerContents","savePartnerContent"
   ]);

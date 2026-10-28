@@ -51,6 +51,8 @@
       async getSession(){ return session; },
       onAuthStateChange(callback){ authListener=callback; return ()=>{authListener=null;}; },
       async signIn(){ authListener?.("SIGNED_IN",session); return session; },
+      async requestPasswordReset(){ throw new Error("Password recovery requires a Supabase connection."); },
+      async updatePassword(){ throw new Error("Password recovery requires a Supabase connection."); },
       async signOut(){ return true; },
       async listProfiles(){ return clone(state.profiles); },
       async getSettings(){ return clone(state.settings); },
