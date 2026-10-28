@@ -1,4 +1,4 @@
-const CACHE_NAME = "marel-houston-shell-v5";
+const CACHE_NAME = "marel-houston-shell-v6";
 const APP_SHELL = [
   "./",
   "./index.html",

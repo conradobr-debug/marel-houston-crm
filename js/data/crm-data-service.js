@@ -46,6 +46,8 @@
     getSession:()=>withFallback("getSession"),
     onAuthStateChange(callback){ return repository?.onAuthStateChange(callback)||(()=>{}); },
     signIn:(email,password)=>withFallback("signIn",[email,password],false),
+    requestPasswordReset:(email,redirectTo)=>withFallback("requestPasswordReset",[email,redirectTo],false),
+    updatePassword:password=>withFallback("updatePassword",[password],false),
     signOut:()=>withFallback("signOut",[],false),
     listProfiles:()=>withFallback("listProfiles"),
     getSettings:()=>withFallback("getSettings"),

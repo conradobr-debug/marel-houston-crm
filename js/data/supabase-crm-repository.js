@@ -288,6 +288,8 @@
       async getSession(){ const {data,error}=await client.auth.getSession();if(error) throw error;return data.session; },
       onAuthStateChange(callback){ const {data}=client.auth.onAuthStateChange((event,session)=>setTimeout(()=>callback(event,session),0));return ()=>data.subscription.unsubscribe(); },
       async signIn(email,password){ const {data,error}=await client.auth.signInWithPassword({email,password});if(error) throw error;return data.session; },
+      async requestPasswordReset(email,redirectTo){ const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});if(error) throw error;return true; },
+      async updatePassword(password){ const {data,error}=await client.auth.updateUser({password});if(error) throw error;return data.user; },
       async signOut(){ const {error}=await client.auth.signOut();if(error) throw error;return true; },
       async listProfiles(){ return checked(client.from("profiles").select("id,display_name,role,is_active").order("display_name",{ascending:true})); },
       async getSettings(){ const data=await checked(client.from("crm_settings").select("lead_sources,lost_reasons").eq("workspace_id",workspaceId).maybeSingle());return {sources:data?.lead_sources||[],lost_reasons:data?.lost_reasons||[]}; },
